@@ -11,6 +11,7 @@ from strands import Agent, tool
 from strands.models.litellm import LiteLLMModel
 
 from tools.violations import get_property_distress_signals as _violations_impl
+from tools.market_signals import get_market_signals as _market_signals_impl
 
 logging.getLogger("LiteLLM").setLevel(logging.ERROR)
 load_dotenv()
@@ -34,6 +35,28 @@ def get_property_distress_signals(bbl: str) -> str:
              Example: "2026140035" (Bronx, block 02614, lot 0035).
     """
     return _violations_impl(bbl)
+
+
+@tool
+def get_market_signals(
+    borough: str,
+    days_back: int = 90,
+    min_sale_price: int = 1_000_000,
+) -> str:
+    """Fetch recent ACRIS deed sales for a NYC borough and return market comps.
+
+    Use this when the user asks about recent sales activity, comp trades,
+    market velocity, or what the market looks like in a given borough.
+    Returns JSON with sale_count, median_price, sample_sales, and a
+    market_signal (active / slow / no_data).
+
+    Args:
+        borough:        NYC borough name (Manhattan, Bronx, Brooklyn, Queens,
+                        Staten Island). Case-insensitive.
+        days_back:      How many calendar days back to search. Default 90.
+        min_sale_price: Minimum transaction size to include. Default $1,000,000.
+    """
+    return _market_signals_impl(borough, days_back, min_sale_price)
 
 
 SYSTEM_PROMPT = """You are an analyst tool for a CRE distressed-multifamily acquisitions team in NYC.
@@ -68,7 +91,7 @@ def run(user_query: str):
     )
     agent = Agent(
         model=model,
-        tools=[get_property_distress_signals],
+        tools=[get_property_distress_signals, get_market_signals],
         system_prompt=SYSTEM_PROMPT,
     )
     result = agent(user_query)
