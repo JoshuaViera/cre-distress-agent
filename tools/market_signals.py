@@ -172,13 +172,18 @@ def get_market_signals(
     # Grab doc_ids for the first 5 records only (avoid a huge IN clause)
     top5_doc_ids = [r["document_id"] for r in master_records[:5]]
     in_clause = ",".join(f"'{d}'" for d in top5_doc_ids)
-    address_map: dict[str, str] = {}
+    # enrichment_map: doc_id → {address, borough_code}
+    # borough_code from Legals is the ground-truth confirmation that the
+    # record really belongs to the requested borough (catches filter drift).
+    enrichment_map: dict[str, dict] = {}
 
     try:
         legals_resp = requests.get(
             ACRIS_LEGALS_ENDPOINT,
             params={
-                "$where": f"document_id in ({in_clause})",
+                # Filter by borough_code here too — without this, a document_id
+                # that appears in multiple boroughs can return the wrong record.
+                "$where": f"document_id in ({in_clause}) AND borough='{borough_code}'",
                 "$select": "document_id,street_number,street_name,borough",
                 "$limit": 10,
             },
@@ -189,8 +194,11 @@ def get_market_signals(
             doc_id = leg.get("document_id", "")
             street_no = leg.get("street_number", "")
             street_name = leg.get("street_name", "")
-            if doc_id and (street_no or street_name):
-                address_map[doc_id] = f"{street_no} {street_name}".strip()
+            if doc_id:
+                enrichment_map[doc_id] = {
+                    "address": f"{street_no} {street_name}".strip(),
+                    "borough_code": leg.get("borough", ""),
+                }
     except Exception:
         # Address enrichment is best-effort — never let it crash the tool
         pass
@@ -209,12 +217,16 @@ def get_market_signals(
 
         if len(sample_sales) < 5:
             doc_id = rec.get("document_id", "")
+            enrichment = enrichment_map.get(doc_id, {})
             sample_sales.append({
                 "document_id": doc_id,
                 "doc_type": rec.get("doc_type", ""),
                 "sale_price": amt,
                 "recorded_date": (rec.get("recorded_datetime") or "")[:10],
-                "address": address_map.get(doc_id, ""),
+                "address": enrichment.get("address", ""),
+                # borough_code: ground-truth from ACRIS Legals (confirms filter
+                # is working — should always equal the requested borough code)
+                "borough_code": enrichment.get("borough_code", ""),
                 "acris_url": f"https://a836-acris.nyc.gov/DS/DocumentSearch/DocumentDetail?doc_id={doc_id}",
             })
 
@@ -246,21 +258,52 @@ if __name__ == "__main__":
     import sys
 
     print("=" * 60)
-    print("Test 1: Manhattan — real data expected")
+    print("Test 1: Manhattan (borough=1) — real data + borough filter check")
     print("=" * 60)
-    print(get_market_signals("Manhattan", days_back=90, min_sale_price=1_000_000))
+    raw1 = get_market_signals("Manhattan", days_back=90, min_sale_price=1_000_000)
+    result1 = json.loads(raw1)
+    print(json.dumps(result1, indent=2))
+    enriched1 = [s for s in result1["sample_sales"] if s["borough_code"]]
+    bad1 = [s for s in enriched1 if s["borough_code"] != "1"]
+    if bad1:
+        print(f"\n[FAIL] {len(bad1)} sample sale(s) have wrong borough_code: {bad1}")
+        sys.exit(1)
+    print(f"[PASS] borough filter OK -- all {len(enriched1)} enriched records are borough 1")
 
     print("\n" + "=" * 60)
-    print("Test 2: Brooklyn — real data expected")
+    print("Test 2: Brooklyn (borough=3) — real data + borough filter check")
     print("=" * 60)
-    print(get_market_signals("Brooklyn", days_back=90, min_sale_price=1_000_000))
+    raw2 = get_market_signals("Brooklyn", days_back=90, min_sale_price=1_000_000)
+    result2 = json.loads(raw2)
+    print(json.dumps(result2, indent=2))
+    assert result2.get("sale_count", 0) > 0, "Expected Brooklyn sales, got zero — filter may be broken"
+    enriched2 = [s for s in result2["sample_sales"] if s["borough_code"]]
+    bad2 = [s for s in enriched2 if s["borough_code"] != "3"]
+    if bad2:
+        print(f"\n[FAIL] {len(bad2)} sample sale(s) have wrong borough_code: {bad2}")
+        sys.exit(1)
+    print(f"[PASS] borough filter OK -- all {len(enriched2)} enriched records are borough 3")
 
     print("\n" + "=" * 60)
     print("Test 3: bad borough — should return error envelope, not crash")
     print("=" * 60)
-    print(get_market_signals("Narnia"))
+    raw3 = get_market_signals("Narnia")
+    result3 = json.loads(raw3)
+    print(json.dumps(result3, indent=2))
+    assert "error" in result3, "Expected error key in envelope"
+    assert result3["error"] == "invalid_borough"
+    print("[PASS] bad borough returns error envelope")
 
     print("\n" + "=" * 60)
     print("Test 4: absurd min price — should return market_signal: no_data, not crash")
     print("=" * 60)
-    print(get_market_signals("Manhattan", days_back=90, min_sale_price=999_999_999))
+    raw4 = get_market_signals("Manhattan", days_back=90, min_sale_price=999_999_999)
+    result4 = json.loads(raw4)
+    print(json.dumps(result4, indent=2))
+    assert result4["market_signal"] == "no_data", "Expected no_data for absurd min price"
+    assert result4["sale_count"] == 0
+    print("[PASS] empty result returns market_signal=no_data")
+
+    print("\n" + "=" * 60)
+    print("All tests passed [PASS]")
+    print("=" * 60)
