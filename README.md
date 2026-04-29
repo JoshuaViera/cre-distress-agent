@@ -173,8 +173,6 @@ The v1 → v2 story is the pitch for what a frontier model unlocks.
 | Kevin Natera      | Slides, integration QA                                |
 | Gamaliel Leguista | Merges, integration QA, presenting                    |
 
-Built during Pursuit AI-Native Fellowship, Cycle 3 · Cohort demo May 2, 2026.
-
 ---
 
 ## Known model behaviors
