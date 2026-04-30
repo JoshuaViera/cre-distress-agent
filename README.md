@@ -129,7 +129,7 @@ cre-distress-agent/
 
 ---
 
-## v1 scope (Saturday demo)
+## v1 scope
 
 - Three signal tools: HPD, ACRIS, FRED
 - Deterministic underwriting delta math in Python
@@ -138,7 +138,7 @@ cre-distress-agent/
 - Markdown briefing to stdout
 - Single pre-staged demo deal
 
-## v2 (Week 2, Claude upgrade)
+## v2 scope
 
 - Daily snapshot + diff: _"what changed since yesterday"_
 - Memory across runs: the agent remembers which alerts the analyst confirmed vs. dismissed
