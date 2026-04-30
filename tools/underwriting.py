@@ -98,6 +98,29 @@ def _build_cash_flows(
     return cfs
 
 
+def _severity_from_irr_delta(irr_delta: Optional[float], deal_stage: Optional[str]) -> int:
+    """Deterministic severity floor for the underwriting signal.
+
+    The LLM is unreliable about consistently mapping the same magnitude of
+    impact to the same severity score. This function pins it: a >=2.5 pt
+    IRR move on an LOI/under-contract deal is a 5 (could kill the deal),
+    a >=1.5 pt move is a 4, and so on.
+    """
+    if irr_delta is None:
+        return 1
+    mag = abs(irr_delta)
+    late_stage = (deal_stage or "").upper() in {"LOI", "UNDER_CONTRACT", "UNDER CONTRACT"}
+    if mag >= 0.025:
+        return 5 if late_stage else 4
+    if mag >= 0.015:
+        return 4
+    if mag >= 0.005:
+        return 3
+    if mag >= 0.001:
+        return 2
+    return 1
+
+
 def _validate(deal_profile: dict) -> Optional[str]:
     """Return None if valid, otherwise an error message."""
     if not isinstance(deal_profile, dict):
@@ -221,6 +244,11 @@ def compute_underwriting_delta(
         exit_noi = noi_assumed * (1.0 + rent_growth) ** hold_years
         exit_value_delta = (exit_noi / float(observed_cap)) - (exit_noi / assumed_exit_cap)
 
+    # Deterministic severity hint for the underwriting signal. The LLM is
+    # told to use this as the floor for the underwriting category so the
+    # killer-quote scenario always crosses the human-checkpoint threshold.
+    severity_hint = _severity_from_irr_delta(irr_delta, deal_profile.get("deal_stage"))
+
     return json.dumps({
         "noi_delta_dollars": round(noi_delta),
         "noi_assumed_dollars": round(noi_assumed),
@@ -230,6 +258,7 @@ def compute_underwriting_delta(
         "irr_delta_pct": round(irr_delta, 4) if irr_delta is not None else None,
         "irr_stated_in_deal_pct": irr_stated,
         "exit_value_delta_dollars": round(exit_value_delta) if exit_value_delta is not None else None,
+        "severity_hint": severity_hint,
         "narrative_inputs": {
             "square_footage": sf,
             "assumed_rent_psf": assumed_rent,

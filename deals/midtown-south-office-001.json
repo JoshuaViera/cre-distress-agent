@@ -28,5 +28,10 @@
   "market_dynamics": {
     "annual_rent_rollover_pct": 0.385
   },
+  "demo_observations": {
+    "observed_rent_psf": 68.0,
+    "_note": "Observed market rent for the staged demo scenario. Replace with a live leasing-comps feed (CompStak, etc.) for production runs.",
+    "_simulated_signal": "Three Midtown South office leases week of 2026-04-26 signed at $66-69/SF, weighted midpoint $68."
+  },
   "assumptions_locked_at": "2026-04-25"
 }
