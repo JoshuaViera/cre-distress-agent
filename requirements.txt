@@ -1,0 +1,6 @@
+# CRE Deal Pulse — Python dependencies
+# Requires Python 3.10+ (3.13 recommended).
+
+strands-agents[litellm]>=1.37.0,<2.0.0
+requests>=2.31.0
+python-dotenv>=1.0.0

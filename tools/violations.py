@@ -89,6 +89,8 @@ def get_property_distress_signals(bbl: str) -> str:
             "message": "HPD API returned non-JSON.",
         })
 
+    source_url = f"https://data.cityofnewyork.us/Housing-Development/Housing-Maintenance-Code-Violations/wvxf-dwi5?bbl={bbl}"
+
     # Empty result handling — valid BBL, no violations on file
     if not violations:
         return json.dumps({
@@ -98,6 +100,7 @@ def get_property_distress_signals(bbl: str) -> str:
             "most_recent_violation": None,
             "distress_score": "none",
             "sample_violations": [],
+            "source_url": source_url,
             "note": "No HPD violations on file for this BBL.",
         })
 
@@ -130,6 +133,7 @@ def get_property_distress_signals(bbl: str) -> str:
         "most_recent_violation": most_recent,
         "distress_score": _classify_distress(len(violations), severity["C"]),
         "sample_violations": sample,
+        "source_url": source_url,
     }, indent=2)
 
 
