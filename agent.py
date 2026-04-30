@@ -6,12 +6,14 @@ for a distressed-multifamily acquisitions analyst.
 import logging
 import os
 import sys
+
 from dotenv import load_dotenv
 from strands import Agent, tool
 from strands.models.litellm import LiteLLMModel
 
 from tools.violations import get_property_distress_signals as _violations_impl
 from tools.market_signals import get_market_signals as _market_signals_impl
+from tools.macro_signals import get_macro_signals as _macro_signals_impl
 
 logging.getLogger("LiteLLM").setLevel(logging.ERROR)
 load_dotenv()
@@ -51,12 +53,28 @@ def get_market_signals(
     market_signal (active / slow / no_data).
 
     Args:
-        borough:        NYC borough name (Manhattan, Bronx, Brooklyn, Queens,
-                        Staten Island). Case-insensitive.
-        days_back:      How many calendar days back to search. Default 90.
+        borough: NYC borough name (Manhattan, Bronx, Brooklyn, Queens,
+                 Staten Island). Case-insensitive.
+        days_back: How many calendar days back to search. Default 90.
         min_sale_price: Minimum transaction size to include. Default $1,000,000.
     """
     return _market_signals_impl(borough, days_back, min_sale_price)
+
+
+@tool
+def get_macro_signals(days_back: int = 30) -> str:
+    """Fetch recent FRED rate data (10Y Treasury, SOFR) and return a macro signal.
+
+    Use this when the user asks about interest rates, the rate environment,
+    or macro conditions affecting the deal. Returns JSON with current vs.
+    prior values for the 10-Year Treasury (DGS10) and SOFR, signed bps_change
+    for each (positive = rates rose, negative = rates fell), and a top-level
+    macro_signal (rates_moved / stable / no_data).
+
+    Args:
+        days_back: How many calendar days back to compare against. Default 30.
+    """
+    return _macro_signals_impl(days_back)
 
 
 SYSTEM_PROMPT = """You are an analyst tool for a CRE distressed-multifamily acquisitions team in NYC.
@@ -91,7 +109,11 @@ def run(user_query: str):
     )
     agent = Agent(
         model=model,
-        tools=[get_property_distress_signals, get_market_signals],
+        tools=[
+            get_property_distress_signals,
+            get_market_signals,
+            get_macro_signals,
+        ],
         system_prompt=SYSTEM_PROMPT,
     )
     result = agent(user_query)
