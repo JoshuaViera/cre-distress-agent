@@ -1,0 +1,37 @@
+{
+  "deal_id": "midtown-south-office-001",
+  "property": {
+    "address": "150 W 30th St, New York, NY 10001",
+    "bbl": "1008060001",
+    "borough": "1",
+    "submarket": "Midtown South",
+    "asset_class": "office",
+    "square_footage": 85000,
+    "top_tenants": ["Tenant A", "Tenant B", "Tenant C"]
+  },
+  "deal_stage": "LOI",
+  "underwriting": {
+    "market_rent_psf": 74.0,
+    "in_place_rent_psf": 68.0,
+    "vacancy_rate": 0.08,
+    "going_in_cap": 0.055,
+    "exit_cap": 0.060,
+    "rent_growth": 0.03,
+    "hold_period_years": 5,
+    "noi": 5200000,
+    "irr": 0.14
+  },
+  "financing": {
+    "ltv": 0.75,
+    "debt_rate": 0.045
+  },
+  "market_dynamics": {
+    "annual_rent_rollover_pct": 0.385
+  },
+  "demo_observations": {
+    "observed_rent_psf": 68.0,
+    "_note": "Observed market rent for the staged demo scenario. Replace with a live leasing-comps feed (CompStak, etc.) for production runs.",
+    "_simulated_signal": "Three Midtown South office leases week of 2026-04-26 signed at $66-69/SF, weighted midpoint $68."
+  },
+  "assumptions_locked_at": "2026-04-25"
+}

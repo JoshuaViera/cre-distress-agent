@@ -45,7 +45,7 @@ Built for the Pursuit AI-Native Fellowship Cycle 3.
 
 ## Quick start
 
-**Prereqs:** Python 3.13, an OpenRouter API key, a free FRED API key.
+**Prereqs:** Python 3.10+ (3.13 recommended), an OpenRouter API key, a free FRED API key.
 
 ```bash
 git clone https://github.com/JoshuaViera/cre-distress-agent.git
@@ -69,7 +69,22 @@ Run the agent on the staged demo deal:
 python agent.py
 ```
 
-You should see the agent call HPD, ACRIS, and FRED in sequence, score each signal, pause at any severity-5 alert, and emit a markdown briefing to stdout.
+You should see the agent call HPD, ACRIS, FRED, and the deterministic underwriting math in sequence, emit a JSON scoring block, pause at any severity-5 alert (stdin `y/n`), then print a markdown briefing.
+
+To point at a different deal profile:
+
+```bash
+python agent.py --deal deals/midtown-south-office-001.json
+```
+
+Verify each tool independently:
+
+```bash
+python tools/violations.py
+python tools/market_signals.py
+python tools/macro_signals.py     # needs FRED_API_KEY
+python tools/underwriting.py
+```
 
 ---
 
@@ -113,14 +128,15 @@ The deal profile is the single shared input. Every tool and the math function re
 
 ```
 cre-distress-agent/
-├── agent.py                  # Main agent loop, system prompt, tool wiring
+├── agent.py                  # Main agent loop, two-phase scoring + briefing
 ├── tools/
 │   ├── violations.py         # Tool 1: HPD violations (Property signals)
 │   ├── market_signals.py     # Tool 2: ACRIS sales (Market signals)
 │   ├── macro_signals.py      # Tool 3: FRED rates (Macro signals)
-│   └── underwriting.py       # Deterministic NOI/IRR delta math
+│   └── underwriting.py       # Tool 4: deterministic NOI/IRR delta math
 ├── deals/
-│   └── midtown-south-office-001.json  # Staged demo deal
+│   └── midtown-south-office-001.json  # Staged demo deal (PRD schema)
+├── runs/                     # Auto-created; checkpoint decision logs
 ├── test_model.py             # Hy3 round-trip smoke test
 ├── requirements.txt
 ├── .env.example
