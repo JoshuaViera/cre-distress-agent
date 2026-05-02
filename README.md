@@ -22,12 +22,13 @@ Built for the Pursuit AI-Native Fellowship Cycle 3.
 
 **Input:** a deal profile JSON (address, BBL, asset class, underwriting assumptions).
 
-**Three signal buckets:**
+**Four signal buckets:**
 
 | Bucket   | Source                 | What it watches                                              |
 | -------- | ---------------------- | ------------------------------------------------------------ |
 | Property | NYC HPD violations API | Open code violations, severity breakdown on the target asset |
-| Market   | NYC ACRIS              | Recent comparable sales by borough and submarket             |
+| Leasing  | Lease comps CSV        | Recent comparable lease rents by submarket and asset class   |
+| Market   | NYC ACRIS              | Recent deed sales by borough                                 |
 | Macro    | FRED                   | 10-year Treasury, SOFR                                       |
 
 **The loop:**
@@ -37,7 +38,7 @@ Built for the Pursuit AI-Native Fellowship Cycle 3.
 3. Pass observed values + assumed values to a deterministic Python function (`compute_underwriting_delta`) that calculates NOI and IRR impact. _Math runs in code, not in the model._
 4. The LLM scores materiality 1–5 and narrates the impact in analyst-style language.
 5. If any signal scores 5, the agent **pauses for human review** before producing the final briefing.
-6. Output: a markdown briefing — top alerts first, full change log below.
+6. Output: a markdown briefing — top alerts first, full change log below. The briefing and structured run artifact are saved under `runs/`.
 
 **Stack:** Strands (agent framework) · LiteLLM (provider adapter) · OpenRouter (gateway) · Tencent Hy3 Preview (v1 model, free tier) · Python 3.13.
 
@@ -77,10 +78,25 @@ To point at a different deal profile:
 python agent.py --deal deals/midtown-south-office-001.json
 ```
 
+To use your own lease comps export:
+
+```bash
+python agent.py --lease-comps path/to/lease_comps.csv
+```
+
+Lease comps CSV columns:
+
+```csv
+address,submarket,asset_class,lease_date,rent_psf,square_feet,term_months,tenant,source
+```
+
+The v1 rent signal filters to the deal's `property.submarket`, `property.asset_class`, and the last 90 days, then uses the median `rent_psf` as observed market rent. Use `--lease-days` to change the lookback window, or `--observed-rent` for a manual override.
+
 Verify each tool independently:
 
 ```bash
 python tools/violations.py
+python tools/leasing_signals.py
 python tools/market_signals.py
 python tools/macro_signals.py     # needs FRED_API_KEY
 python tools/underwriting.py
@@ -116,6 +132,9 @@ The deal profile is the single shared input. Every tool and the math function re
     "noi": 5200000,
     "irr": 0.14
   },
+  "data_sources": {
+    "lease_comps_csv": "data/lease_comps_sample.csv"
+  },
   "assumptions_locked_at": "2026-04-25"
 }
 ```
@@ -131,12 +150,15 @@ cre-distress-agent/
 ├── agent.py                  # Main agent loop, two-phase scoring + briefing
 ├── tools/
 │   ├── violations.py         # Tool 1: HPD violations (Property signals)
-│   ├── market_signals.py     # Tool 2: ACRIS sales (Market signals)
-│   ├── macro_signals.py      # Tool 3: FRED rates (Macro signals)
-│   └── underwriting.py       # Tool 4: deterministic NOI/IRR delta math
+│   ├── leasing_signals.py    # Tool 2: local lease comps CSV (Rent signals)
+│   ├── market_signals.py     # Tool 3: ACRIS sales (Market signals)
+│   ├── macro_signals.py      # Tool 4: FRED rates (Macro signals)
+│   └── underwriting.py       # Tool 5: deterministic NOI/IRR delta math
+├── data/
+│   └── lease_comps_sample.csv
 ├── deals/
 │   └── midtown-south-office-001.json  # Staged demo deal (PRD schema)
-├── runs/                     # Auto-created; checkpoint decision logs
+├── runs/                     # Auto-created; reports, run JSON, checkpoint logs
 ├── test_model.py             # Hy3 round-trip smoke test
 ├── requirements.txt
 ├── .env.example
@@ -147,11 +169,11 @@ cre-distress-agent/
 
 ## v1 scope
 
-- Three signal tools: HPD, ACRIS, FRED
+- Four signal tools: HPD, lease comps CSV, ACRIS, FRED
 - Deterministic underwriting delta math in Python
 - Materiality scoring (1–5) by the LLM
 - Human checkpoint on severity-5 alerts
-- Markdown briefing to stdout
+- Markdown briefing to stdout and `runs/`
 - Single pre-staged demo deal
 
 ## v2 scope

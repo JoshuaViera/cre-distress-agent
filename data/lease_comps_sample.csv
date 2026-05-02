@@ -1,0 +1,6 @@
+address,submarket,asset_class,lease_date,rent_psf,square_feet,term_months,tenant,source
+135 W 29th St,Midtown South,office,2026-04-27,66.00,18000,84,Tenant Alpha,broker_export_demo
+152 W 31st St,Midtown South,office,2026-04-28,68.00,22000,60,Tenant Beta,broker_export_demo
+18 W 27th St,Midtown South,office,2026-04-30,69.00,15000,72,Tenant Gamma,broker_export_demo
+99 Hudson St,Downtown Manhattan,office,2026-04-26,74.00,25000,84,Tenant Delta,broker_export_demo
+200 Park Ave,Grand Central,office,2026-04-24,82.00,30000,120,Tenant Epsilon,broker_export_demo
