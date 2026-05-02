@@ -106,6 +106,21 @@ python tools/underwriting.py
 
 ---
 
+## Demo web UI (optional)
+
+A minimal web UI is included for the live demo — it shows the same agent run as the CLI, but as a streaming page in the browser instead of terminal output.
+
+```bash
+uvicorn web.server:app --reload
+# open http://localhost:8000
+```
+
+Click **Start scan**. The left column streams each tool firing in real time as the agent runs; the right column lights up the corresponding signal cards and renders the briefing markdown when the model finishes drafting. Severity-5 findings are auto-confirmed (the page surfaces the reasoning as a banner so the demo narrative still lands).
+
+Stack: FastAPI + Server-Sent Events + a single static HTML page (Inter, no framework). The server subprocesses `python agent.py --yes` and parses its stdout into structured SSE events. The full v2 design — multi-deal pipeline, comps CRUD, in-page severity-5 confirm/override — is documented in `docs/superpowers/specs/2026-05-01-deal-pulse-ui-design.md` and is deferred.
+
+---
+
 ## Deal profile
 
 The deal profile is the single shared input. Every tool and the math function reads from this schema:
