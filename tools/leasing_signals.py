@@ -177,7 +177,7 @@ def get_leasing_signals(
     rents = [row["rent_psf"] for row in rows]
     weighted = _weighted_average(rows)
     median = _median(rents)
-    observed = median
+    observed = weighted if weighted is not None else median
 
     rows.sort(key=lambda row: row["lease_date"], reverse=True)
     return json.dumps({
@@ -186,7 +186,7 @@ def get_leasing_signals(
         "comp_count": len(rows),
         "median_rent_psf": median,
         "weighted_average_rent_psf": weighted,
-        "method": "same submarket + same asset class + last N days; observed rent uses median rent_psf",
+        "method": "same submarket + same asset class + last N days; observed rent uses weighted_average_rent_psf when square_feet is available, with median_rent_psf as a sanity check",
         "sample_comps": rows[:5],
         "filters": {
             "submarket": prop.get("submarket"),
@@ -208,6 +208,6 @@ if __name__ == "__main__":
     parsed = json.loads(out)
     print(out)
     assert parsed["rent_signal"] == "available"
-    assert parsed["observed_rent_psf"] == 68.0
+    assert parsed["observed_rent_psf"] == 67.62
     assert parsed["comp_count"] == 3
-    print("[PASS] sample lease comps produce observed rent of $68.00/SF")
+    print("[PASS] sample lease comps produce observed rent of $67.62/SF")

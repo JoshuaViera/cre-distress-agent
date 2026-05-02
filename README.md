@@ -70,7 +70,7 @@ Run the agent on the staged demo deal:
 python agent.py
 ```
 
-You should see the agent call HPD, ACRIS, FRED, and the deterministic underwriting math in sequence, emit a JSON scoring block, pause at any severity-5 alert (stdin `y/n`), then print a markdown briefing.
+You should see the agent call HPD, lease comps CSV, ACRIS, FRED, and the deterministic underwriting math in sequence, emit a JSON scoring block, pause at any severity-5 alert (stdin `y/n`), then print a markdown briefing.
 
 To point at a different deal profile:
 
@@ -90,7 +90,9 @@ Lease comps CSV columns:
 address,submarket,asset_class,lease_date,rent_psf,square_feet,term_months,tenant,source
 ```
 
-The v1 rent signal filters to the deal's `property.submarket`, `property.asset_class`, and the last 90 days, then uses the median `rent_psf` as observed market rent. Use `--lease-days` to change the lookback window, or `--observed-rent` for a manual override.
+The v1 rent signal filters to the deal's `property.submarket`, `property.asset_class`, and the last 90 days, then uses the square-footage-weighted average `rent_psf` as observed market rent. Median rent is still returned as a sanity check. Use `--lease-days` to change the lookback window, or `--observed-rent` for a manual override.
+
+The included `data/lease_comps_sample.csv` is a demo-staged broker export, not a live comps feed. The production path is to export approved lease comps from an internal, broker, or paid data source into the same CSV schema.
 
 Verify each tool independently:
 

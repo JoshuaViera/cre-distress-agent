@@ -271,8 +271,9 @@ Constraints:
 severity_hint field in the underwriting tool output (it is computed \
 deterministically from the IRR magnitude and deal stage).
 - For the underwriting signal, source_url MUST be the underwriting tool's \
-key driver — use the lease comps source_url if observed_rent_psf was the \
-main driver, otherwise use the FRED 10Y source URL.
+key driver. Use the lease comps source_url if observed_inputs_used includes \
+observed_rent_psf. Use the FRED 10Y source URL if observed_rate_bps is the \
+main driver and observed_rent_psf is null.
 - If a tool returned an error envelope, score that category 1 and mark \
 observed 'unavailable'.
 - Output JSON only. No backticks, no markdown, no commentary."""
