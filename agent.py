@@ -20,7 +20,13 @@ import re
 import sys
 from datetime import datetime, timezone
 from pathlib import Path
-from typing import Any, Optional
+from typing import Any, Callable, Optional
+
+# A run-event callback: fn(kind, payload) -> None. The CLI prints; a future
+# API layer (see docs/superpowers/specs/2026-05-01-deal-pulse-ui-design.md)
+# will pump these into an SSE stream. Decouples agent core from how events
+# are reported.
+RunEvent = Callable[[str, dict], None]
 
 from dotenv import load_dotenv
 from strands import Agent
@@ -83,8 +89,10 @@ def _resolve_path(path: Optional[Path | str]) -> Optional[Path]:
 # tool outputs. Each step prints a single visible status line for the demo.
 # ─────────────────────────────────────────────────────────────────────────────
 
-def _step(label: str) -> None:
-    print(f"  [tool] {label} …", flush=True)
+def _print_event(kind: str, payload: dict) -> None:
+    """Default RunEvent for the CLI: prints one status line per tool start."""
+    if kind == "tool_started":
+        print(f"  [tool] {payload['label']} …", flush=True)
 
 
 def _gather_signals(
@@ -92,20 +100,21 @@ def _gather_signals(
     observed_rent_override: Optional[float],
     lease_comps_path: Optional[Path],
     lease_days_back: int,
+    on_event: RunEvent,
 ) -> dict:
     prop = deal["property"]
     borough_name = BOROUGH_CODE_TO_NAME.get(prop["borough"], "Manhattan")
 
-    _step("HPD violations on target BBL")
+    on_event("tool_started", {"tool": "hpd", "label": "HPD violations on target BBL"})
     hpd = json.loads(_violations_impl(prop["bbl"]))
 
-    _step("Lease comps rent signal")
+    on_event("tool_started", {"tool": "leasing", "label": "Lease comps rent signal"})
     leasing = json.loads(_leasing_signals_impl(deal, str(lease_comps_path), days_back=lease_days_back))
 
-    _step(f"ACRIS recent sales — {borough_name}")
+    on_event("tool_started", {"tool": "acris", "label": f"ACRIS recent sales — {borough_name}"})
     acris = json.loads(_market_signals_impl(borough_name, days_back=90, min_sale_price=1_000_000))
 
-    _step("FRED 10Y Treasury + SOFR")
+    on_event("tool_started", {"tool": "fred", "label": "FRED 10Y Treasury + SOFR"})
     fred = json.loads(_macro_signals_impl(days_back=30))
 
     # Choose observed inputs the underwriting tool will price.
@@ -121,7 +130,7 @@ def _gather_signals(
         observed_rent_psf = leasing.get("observed_rent_psf")
         observed_rent_source = leasing.get("source_url")
 
-    _step("Underwriting delta (deterministic Python)")
+    on_event("tool_started", {"tool": "underwriting", "label": "Underwriting delta (deterministic Python)"})
     underwriting = json.loads(_underwriting_impl(
         deal,
         observed_rent_psf=observed_rent_psf,
@@ -438,6 +447,7 @@ def run(
     lease_comps_path: Optional[Path],
     lease_days_back: int,
     auto_confirm: bool,
+    on_event: RunEvent = _print_event,
 ) -> None:
     deal = _load_deal(deal_path)
     data_sources = deal.get("data_sources") or {}
@@ -454,6 +464,7 @@ def run(
         observed_rent_override,
         resolved_lease_comps_path,
         lease_days_back,
+        on_event,
     )
     print("Scoring with model…")
 
@@ -462,7 +473,19 @@ def run(
     raw1 = str(agent(_phase1_query(deal, signals)))
     scoring = _extract_json(raw1)
     if scoring is None or "scoring" not in scoring:
-        print("\n[ERROR] Could not parse scoring JSON. Raw model output:\n")
+        # Hy3 occasionally wraps the JSON in prose despite the system prompt.
+        # One repair-retry uses the existing conversation context and asks
+        # for JSON only — cheaper and more reliable than re-running phase 1.
+        print("  [retry] phase-1 JSON malformed, requesting repair …", flush=True)
+        repair = (
+            "Your previous response could not be parsed as JSON. "
+            "Re-emit the same scoring object with NO prose, NO markdown fences, "
+            "and NO commentary — only the JSON object."
+        )
+        raw1 = str(agent(repair))
+        scoring = _extract_json(raw1)
+    if scoring is None or "scoring" not in scoring:
+        print("\n[ERROR] Could not parse scoring JSON after retry. Raw model output:\n")
         print(raw1)
         sys.exit(1)
 
