@@ -152,7 +152,7 @@ def compute_underwriting_delta(
     Args:
         deal_profile: parsed deal JSON (matches the locked PRD schema, plus
                       optional 'financing' and 'market_dynamics' blocks).
-        observed_rent_psf: observed market rent per SF (e.g. from ACRIS comps
+        observed_rent_psf: observed market rent per SF (e.g. from lease comps
                            or recent leases). Pass None to skip rent delta.
         observed_cap: observed market cap rate as a decimal (e.g. 0.062).
                       Affects exit valuation. Pass None to skip.
