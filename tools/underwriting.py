@@ -146,22 +146,34 @@ def compute_underwriting_delta(
     observed_rent_psf: Optional[float] = None,
     observed_cap: Optional[float] = None,
     observed_rate_bps: Optional[float] = None,
+    observed_rent_psf_source: Optional[str] = None,
+    observed_cap_source: Optional[str] = None,
+    observed_rate_source: Optional[str] = None,
 ) -> str:
     """Compute the NOI and IRR impact of observed values vs assumed values.
 
     Args:
         deal_profile: parsed deal JSON (matches the locked PRD schema, plus
                       optional 'financing' and 'market_dynamics' blocks).
-        observed_rent_psf: observed market rent per SF (e.g. from lease comps
+        observed_rent_psf: observed market rent per SF (e.g. from ACRIS comps
                            or recent leases). Pass None to skip rent delta.
         observed_cap: observed market cap rate as a decimal (e.g. 0.062).
                       Affects exit valuation. Pass None to skip.
         observed_rate_bps: change in benchmark rate in basis points
                            (e.g. +28 means rates rose 28 bps since lock).
                            Affects debt service. Pass None to skip.
+        observed_rent_psf_source / observed_cap_source / observed_rate_source:
+            Optional provenance label for each observed value (e.g.
+            "market_signals", "macro_signals", "cli_override",
+            "deal.demo_observations"). Echoed in the per-driver audit entry
+            so the synthesis turn can cite where each observed value came
+            from without re-reading the deal profile.
 
     Returns:
         JSON string with:
+          - deal_id                 (echoed from deal_profile for audit)
+          - assumptions_locked_at   (echoed from deal_profile for audit)
+          - drivers[]               (per-observed-value entries with source_tool)
           - noi_delta_dollars       (signed, negative = NOI drops)
           - irr_assumed_pct         (computed baseline IRR, decimal)
           - irr_observed_pct        (IRR after applying observed values)
@@ -249,7 +261,36 @@ def compute_underwriting_delta(
     # killer-quote scenario always crosses the human-checkpoint threshold.
     severity_hint = _severity_from_irr_delta(irr_delta, deal_profile.get("deal_stage"))
 
+    drivers: list[dict] = []
+    if observed_rent_psf is not None:
+        drivers.append({
+            "name": "observed_rent_psf",
+            "observed": float(observed_rent_psf),
+            "assumed": assumed_rent,
+            "unit": "$/SF",
+            "source_tool": observed_rent_psf_source or "unspecified",
+        })
+    if observed_cap is not None:
+        drivers.append({
+            "name": "observed_cap",
+            "observed": float(observed_cap),
+            "assumed": assumed_exit_cap,
+            "unit": "decimal cap rate",
+            "source_tool": observed_cap_source or "unspecified",
+        })
+    if observed_rate_bps is not None:
+        drivers.append({
+            "name": "observed_rate_bps",
+            "observed": float(observed_rate_bps),
+            "assumed": None,  # this is a signed delta, no absolute "assumed" value
+            "unit": "bps change",
+            "source_tool": observed_rate_source or "unspecified",
+        })
+
     return json.dumps({
+        "deal_id": deal_profile.get("deal_id"),
+        "assumptions_locked_at": deal_profile.get("assumptions_locked_at"),
+        "drivers": drivers,
         "noi_delta_dollars": round(noi_delta),
         "noi_assumed_dollars": round(noi_assumed),
         "noi_observed_dollars": round(noi_observed),

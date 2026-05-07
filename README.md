@@ -12,41 +12,51 @@ That's the product. The analyst didn't have to check CoStar, read three articles
 
 A junior CRE acquisitions analyst spends hours every day refreshing the same sources — CoStar, FRED, news feeds, NYC city portals — to check whether the deals already in their pipeline still pencil. Rates moved, a comp traded, a violation hit the target property: any one signal can change the underwriting. The integration happens in the analyst's head, across five tabs, and material changes get caught late.
 
-Deal Pulse replaces "five tabs and a spreadsheet" with a one-page briefing. It loads the analyst's deal assumptions, scans three buckets of public data, computes the dollar and IRR impact deterministically in Python, and produces a markdown briefing scored by materiality.
+Deal Pulse replaces "five tabs and a spreadsheet" with a one-page briefing. It loads the analyst's deal assumptions, scans three buckets of public data, computes the dollar and IRR impact deterministically in Python, and produces a markdown briefing — routed through a deterministic dispatch node that decides whether the deal needs human review or can auto-render.
 
 Built for the Pursuit AI-Native Fellowship Cycle 3.
 
 ---
 
-## How it works
+## How it works (v2 architecture)
 
 **Input:** a deal profile JSON (address, BBL, asset class, underwriting assumptions).
 
-**Four signal buckets:**
+**Five signal tools (Python orchestrates, model never calls):**
 
-| Bucket   | Source                 | What it watches                                              |
-| -------- | ---------------------- | ------------------------------------------------------------ |
-| Property | NYC HPD violations API | Open code violations, severity breakdown on the target asset |
-| Leasing  | Lease comps CSV        | Recent comparable lease rents by submarket and asset class   |
-| Market   | NYC ACRIS              | Recent deed sales by borough                                 |
-| Macro    | FRED                   | 10-year Treasury, SOFR                                       |
+| Bucket           | Source                  | What it watches                                              |
+| ---------------- | ----------------------- | ------------------------------------------------------------ |
+| Property         | NYC HPD violations API  | Open code violations, severity breakdown on the target asset |
+| Market — sales   | NYC ACRIS               | Recent comparable sales by borough and submarket             |
+| Market — leasing | `tools/leasing_comps.py`| SF-weighted observed rent_psf from CSV / demo_observations   |
+| Macro            | FRED                    | 10-year Treasury, SOFR                                       |
+| Underwriting     | Pure Python DCF         | Deterministic NOI / IRR delta + 5-year levered Newton's IRR  |
 
-**The loop:**
+**The v2 control flow:**
 
-1. Load the deal profile.
-2. Call each signal tool.
-3. Pass observed values + assumed values to a deterministic Python function (`compute_underwriting_delta`) that calculates NOI and IRR impact. _Math runs in code, not in the model._
-4. The LLM scores materiality 1–5 and narrates the impact in analyst-style language.
-5. If any signal scores 5, the agent **pauses for human review** before producing the final briefing.
-6. Output: a markdown briefing — top alerts first, full change log below. The briefing and structured run artifact are saved under `runs/`.
+```
+gather_signals
+   -> POST_MATH_DISPATCH (absolute observed IRR -> green / yellow / red)
+       |
+       +-- green  (IRR > 10%)        -> auto_render          -> synthesis
+       +-- yellow (7.5%-10%)         -> advisory             -> synthesis
+       +-- red    (IRR < 7.5%)       -> requires_human_review
+                                          -> human checkpoint
+                                              +-- y (confirmed) -> synthesis as red
+                                              +-- d (downgrade) -> band -> yellow -> synthesis
+                                              +-- q (abort)     -> exit, no briefing
+   -> synthesis turn         (Claude, single LLM call, branches tone on edge_label)
+   -> compound_finding turn  (Claude, second LLM call, cross-signal reasoning)
+   -> final markdown briefing
+```
 
-**Stack:** Strands (agent framework) · LiteLLM (provider adapter) · OpenRouter (gateway) · Tencent Hy3 Preview (v1 model, free tier) · Python 3.13.
+**Stack:** Strands (agent framework) · LiteLLM (provider adapter) · OpenRouter or Anthropic gateway · Claude (v2 brain — Hy3 free tier still works for v1-equivalent runs) · Python 3.10+.
 
 ---
 
 ## Quick start
 
-**Prereqs:** Python 3.10+ (3.13 recommended), an OpenRouter API key, a free FRED API key.
+**Prereqs:** Python 3.10+ (3.13 recommended), an OpenRouter or Anthropic API key, a free FRED API key.
 
 ```bash
 git clone https://github.com/JoshuaViera/cre-distress-agent.git
@@ -62,6 +72,8 @@ Fill in `.env`:
 ```
 OPENROUTER_API_KEY=your_key_here
 FRED_API_KEY=your_key_here
+# Optional: swap the model. Defaults to Hy3 free tier when unset.
+MODEL_ID=openrouter/anthropic/claude-sonnet-4-5
 ```
 
 Run the agent on the staged demo deal:
@@ -70,7 +82,7 @@ Run the agent on the staged demo deal:
 python agent.py
 ```
 
-You should see the agent call HPD, lease comps CSV, ACRIS, FRED, and the deterministic underwriting math in sequence, emit a JSON scoring block, pause at any severity-5 alert (stdin `y/n`), then print a markdown briefing.
+You should see the agent call HPD, ACRIS, FRED, leasing_comps, and the deterministic underwriting math in sequence, then POST_MATH_DISPATCH classifies the band, the agent pauses at any RED-band checkpoint (stdin `y`/`d`/`q`), then prints the markdown briefing followed by the compound findings section.
 
 To point at a different deal profile:
 
@@ -78,46 +90,35 @@ To point at a different deal profile:
 python agent.py --deal deals/midtown-south-office-001.json
 ```
 
-To use your own lease comps export:
+To override observed market rent (otherwise pulled from `leasing_comps`):
 
 ```bash
-python agent.py --lease-comps path/to/lease_comps.csv
+python agent.py --observed-rent 68
 ```
 
-Lease comps CSV columns:
+To auto-confirm any RED-band checkpoint (for unattended runs):
 
-```csv
-address,submarket,asset_class,lease_date,rent_psf,square_feet,term_months,tenant,source
+```bash
+python agent.py --yes
 ```
-
-The v1 rent signal filters to the deal's `property.submarket`, `property.asset_class`, and the last 90 days, then uses the square-footage-weighted average `rent_psf` as observed market rent. Median rent is still returned as a sanity check. Use `--lease-days` to change the lookback window, or `--observed-rent` for a manual override.
-
-The included `data/lease_comps_sample.csv` is a demo-staged broker export, not a live comps feed. The production path is to export approved lease comps from an internal, broker, or paid data source into the same CSV schema.
 
 Verify each tool independently:
 
 ```bash
 python tools/violations.py
-python tools/leasing_signals.py
 python tools/market_signals.py
 python tools/macro_signals.py     # needs FRED_API_KEY
 python tools/underwriting.py
+python tools/dispatch.py
+python tools/leasing_comps.py
+python tools/snapshot_diff.py
 ```
 
----
-
-## Demo web UI (optional)
-
-A minimal web UI is included for the live demo — it shows the same agent run as the CLI, but as a streaming page in the browser instead of terminal output.
+Run the full test suite (no API keys required — strands, requests, and stdin are all stubbed):
 
 ```bash
-uvicorn web.server:app --reload
-# open http://localhost:8000
+pytest tests/ -v
 ```
-
-Click **Start scan**. The left column streams each tool firing in real time as the agent runs; the right column lights up the corresponding signal cards and renders the briefing markdown when the model finishes drafting. Severity-5 findings are auto-confirmed (the page surfaces the reasoning as a banner so the demo narrative still lands).
-
-Stack: FastAPI + Server-Sent Events + a single static HTML page (Inter, no framework). The server subprocesses `python agent.py --yes` and parses its stdout into structured SSE events. The full v2 design — multi-deal pipeline, comps CRUD, in-page severity-5 confirm/override — is documented in `docs/superpowers/specs/2026-05-01-deal-pulse-ui-design.md` and is deferred.
 
 ---
 
@@ -149,14 +150,13 @@ The deal profile is the single shared input. Every tool and the math function re
     "noi": 5200000,
     "irr": 0.14
   },
-  "data_sources": {
-    "lease_comps_csv": "data/lease_comps_sample.csv"
-  },
   "assumptions_locked_at": "2026-04-25"
 }
 ```
 
 **Field contract:** rates and percentages are decimals (0.14, not "14%"). BBL is a 10-digit string (1 borough + 5 block + 4 lot). Borough is a single character "1"–"5".
+
+**Optional leasing comps source (v2):** drop a CSV at `deals/<deal_id>.comps.csv` with columns `lease_date,address,rent_psf,sf,tenant`. The leasing_comps tool will SF-weight it and prefer it over `demo_observations`.
 
 ---
 
@@ -164,55 +164,84 @@ The deal profile is the single shared input. Every tool and the math function re
 
 ```
 cre-distress-agent/
-├── agent.py                  # Main agent loop, two-phase scoring + briefing
+├── agent.py                       # Main loop — gather, dispatch, checkpoint, synthesis, compound
 ├── tools/
-│   ├── violations.py         # Tool 1: HPD violations (Property signals)
-│   ├── leasing_signals.py    # Tool 2: local lease comps CSV (Rent signals)
-│   ├── market_signals.py     # Tool 3: ACRIS sales (Market signals)
-│   ├── macro_signals.py      # Tool 4: FRED rates (Macro signals)
-│   └── underwriting.py       # Tool 5: deterministic NOI/IRR delta math
-├── data/
-│   └── lease_comps_sample.csv
+│   ├── violations.py              # NYC HPD violations (Property)
+│   ├── market_signals.py          # NYC ACRIS sales comps (Market — sales)
+│   ├── leasing_comps.py           # Leasing comps resolver (Market — leasing) [v2]
+│   ├── macro_signals.py           # FRED 10Y Treasury + SOFR (Macro)
+│   ├── underwriting.py            # Deterministic NOI/IRR delta math
+│   ├── dispatch.py                # POST_MATH_DISPATCH band classifier [v2]
+│   └── snapshot_diff.py           # Day-over-day diff vs prior snapshot
+├── prompts/
+│   ├── system_prompt_v2.txt       # Synthesis-only system prompt (no scoring)
+│   └── compound_finding.txt       # Cross-signal compound finding prompt [v2]
 ├── deals/
-│   └── midtown-south-office-001.json  # Staged demo deal (PRD schema)
-├── runs/                     # Auto-created; reports, run JSON, checkpoint logs
-├── test_model.py             # Hy3 round-trip smoke test
+│   └── midtown-south-office-001.json
+├── tests/
+│   ├── conftest.py                # Strands stub, fake_requests, tmp dirs, demo_deal
+│   ├── test_dispatch.py           # 18 cases: band boundaries, fail-safes, IRR echo
+│   ├── test_leasing_comps.py      # 8 cases: override / CSV / demo / unavailable
+│   ├── test_checkpoint.py         # 25 cases: state machine, audit log, immutability
+│   └── test_run_loop.py           # 6 integration: green / yellow / red / confirm / downgrade / abort
+├── scripts/
+│   └── record_demo.sh             # Wraps agent.py in script(1) for transcript
+├── runs/                          # Auto-created; checkpoint decision logs (gitignored)
+├── snapshots/                     # Auto-created; daily ground-truth snapshots (gitignored)
+├── test_model.py                  # LLM round-trip smoke test (honors MODEL_ID)
 ├── requirements.txt
 ├── .env.example
-└── README.md
+├── README.md
+├── CODEBASE_AUDIT.md              # Full-repo audit
+└── CURRENT_STATE.md               # Internal architecture/state snapshot
 ```
 
 ---
 
-## v1 scope
+## v1 scope (shipped)
 
-- Four signal tools: HPD, lease comps CSV, ACRIS, FRED
-- Deterministic underwriting delta math in Python
+- Three signal tools: HPD, ACRIS, FRED
+- Deterministic underwriting delta math
 - Materiality scoring (1–5) by the LLM
 - Human checkpoint on severity-5 alerts
-- Markdown briefing to stdout and `runs/`
-- Single pre-staged demo deal
+- Markdown briefing to stdout
+- Single staged demo deal
 
-## v2 scope
+## v2 scope (this branch)
 
-- Daily snapshot + diff: _"what changed since yesterday"_
-- Memory across runs: the agent remembers which alerts the analyst confirmed vs. dismissed
-- Multi-step reasoning across signal buckets: _"rates moved AND a comp traded — together that means…"_
-- Real planner: agent decides which sources to check for this deal, not all of them every run
-- Slack/email delivery instead of stdout
-- Tenant credit watch (SEC EDGAR)
+Shipped:
 
-The v1 → v2 story is the pitch for what a frontier model unlocks.
+- [x] **POST_MATH_DISPATCH band classifier** — pure Python, classifies on absolute observed IRR (green > 10% / yellow 7.5%–10% / red < 7.5%). The model no longer scores materiality; math does.
+- [x] **Three-outcome human checkpoint** — `y` confirmed, `d` downgrade (red → yellow), `q` abort. Audit log captures dispatch reason, IRR, NOI delta, drivers, decision.
+- [x] **Synthesis turn (Claude)** — single LLM call, branches tone on edge_label (`auto_render` / `advisory` / `requires_human_review`). Replaces v1's two-phase scoring + briefing.
+- [x] **Compound_finding turn (Claude)** — third LLM call, cross-signal reasoning over today's signals + snapshot_diff temporal vectors. Hard constraint: must cite ≥2 named signals + the linking diff field, otherwise emits "No compound findings this run."
+- [x] **Leasing comps as named tool** — `tools/leasing_comps.py`. Resolution order: CLI override → `deals/<id>.comps.csv` (SF-weighted) → `demo_observations` → unavailable.
+- [x] **Snapshot diff temporal frame** — captures `dispatch` + `leasing_comps` alongside the four signal tools so band transitions are first-class change vectors.
+- [x] **Model swap via env** — `MODEL_ID` env var; one-line .env change to flip Hy3 → Claude.
+- [x] **Hermetic test suite** — 58 tests, no API keys required (strands stubbed, requests faked, stdin/dirs redirected to tmp).
+
+Not yet:
+
+- Override-log writer/loader for analyst memory across runs (Tier 3).
+- Real planner: agent decides which sources to check for this deal, not all of them every run.
+- Slack/email delivery instead of stdout.
+- Tenant credit watch (SEC EDGAR).
 
 ---
 
 ## Design decisions worth flagging
 
-**Math is deterministic, not LLM-vibes.** The NOI and IRR delta runs in Python. The model only narrates the result. _"We compute the impact deterministically and the agent narrates"_ is a stronger story than _"the LLM did some math, hopefully right."_
+**Math is the scorer.** The dispatch tool classifies the deal into green / yellow / red based on the absolute observed IRR. The model does not output severity scores. This is the load-bearing change between v1 and v2 — the model's job is synthesis and cross-signal reasoning, not classification.
 
-**Materiality scoring is LLM, not rules.** The model scores 1–5 based on the _computed delta_, not the raw signal. A 25 bps move on a deal with 30% LTV matters less than the same move on an 80% LTV deal — that judgment is what the model is for.
+**Dispatch is fail-safe red.** If underwriting returns an error envelope, or `irr_observed_pct` is missing, dispatch defaults to red so the analyst always sees the issue at the checkpoint rather than silently auto-rendering a broken brief.
 
-**Human checkpoint is a feature, not a limitation.** Severity-5 alerts pause the agent and surface its reasoning. The cohort brief requires it; the product needs it; partners shouldn't get auto-pinged.
+**Bands route on level, not delta.** A deal that moves 3pt and stays above 10% IRR is green (still a good deal). A deal that moves 1pt and crosses 7.5% is red (the deal is now bad). v1's `_severity_from_irr_delta` (delta magnitude + deal stage) is preserved in `tools/underwriting.py` for back-compat but is no longer load-bearing.
+
+**Checkpoint between dispatch and synthesis.** Stages 4–5 (synthesis + compound_finding) are LLM-only. The human checkpoint sits between stage 3 (dispatch) and stage 4 (synthesis), which resolves the v2 diagram's "no human in the loop at stage 5" requirement without contradiction.
+
+**Leasing comps is a named tool.** Not a hidden lookup inside the agent loop. v1 plumbed `demo_observations` directly into underwriting; v2 routes it through `tools/leasing_comps.py` so the architecture diagram has a real node and a CSV upgrade path is one file away.
+
+**Compound findings have hard guardrails.** Without 1–5 scoring the model could speculate. The compound_finding prompt requires ≥2 named signals and a snapshot_diff anchor per finding, otherwise it emits the empty-state line. No speculative cross-signal narratives.
 
 **No paid data.** NYC has the strongest free public real estate data in the US (HPD, ACRIS, DOF on Socrata). FRED is free. This is defensible without a Bloomberg or CoStar subscription.
 
@@ -232,10 +261,10 @@ The v1 → v2 story is the pitch for what a frontier model unlocks.
 
 ## Known model behaviors
 
-- **Hy3 leaks reasoning text.** It's a reasoning model; `max_tokens` must be ≥ 8192 to avoid mid-thought truncation. LiteLLM logging is suppressed for clean demo output.
-- **`reasoningContent is not supported in multi-turn`** is a harmless LiteLLM warning. Ignore.
-- **Hy3 sometimes thinks it's 2024.** Its knowledge cutoff predates today. The system prompt explicitly tells it the current date so it doesn't flag current data as future-dated.
-- **NYC Open Data has no auth** but rate-limits exist. Caching is a v2 concern.
+- **Hy3 (v1 baseline) leaks reasoning text** unless `extra_body.reasoning.exclude=True`. `max_tokens` must be ≥ 8192 (currently 16384) because reasoning tokens count against the budget. LiteLLM's `reasoningContent is not supported in multi-turn` warning is harmless and ignored.
+- **Claude (v2)** is a clean fit for synthesis + compound_finding. The `extra_body.reasoning` block is harmless when sent to Claude (LiteLLM ignores it); leaving it in lets you flip back to Hy3 by changing only `MODEL_ID`.
+- **NYC Open Data has no auth** but rate-limits exist. Caching is a v3 concern.
+- **Snapshot dates are UTC.** `snapshots/<deal_id>/{YYYY-MM-DD}.json` uses UTC date for the filename, so analysts in non-UTC timezones may see "today" roll over at a different local time.
 
 ---
 

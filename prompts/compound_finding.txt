@@ -1,0 +1,35 @@
+COMPOUND FINDING TASK
+
+You have today's structured tool outputs (above) and the snapshot_diff temporal vectors from the prior snapshot. Your job is to surface CROSS-SIGNAL compound findings — situations where two or more signals jointly imply something that neither signal implies on its own.
+
+Examples of valid compound findings:
+  - "10Y Treasury rose +30 bps AND ACRIS comp velocity in the submarket dropped 40% week-over-week" → cap rates likely widening; the deal's exit cap assumption is at heightened risk.
+  - "HPD class-C violations jumped from 1 to 4 AND in-place rent is 9% below market" → tenant retention risk is now compounding with re-leasing risk; underwritten rollover assumptions may understate downtime.
+  - "Observed market rent dropped 8% AND treasury rose 25 bps" → both NOI and exit valuation pressured; NOI/IRR delta in the underwriting tool understates the full picture because it only models one observed input at a time.
+
+Constraints (HARD):
+  1. Each finding MUST cite at least TWO specific named signals from the tool outputs above (e.g., "macro_signals.treasury_10y", "violations.severity_breakdown.C", "market_signals.sale_count").
+  2. Each finding MUST cite the snapshot_diff field(s) that anchor it temporally (e.g., "snapshot_diff: tool_outputs.macro_signals.treasury_10y.bps_change yesterday=5 today=30") OR explicitly note that no prior snapshot exists yet.
+  3. Each finding must include one short analyst-actionable recommendation.
+  4. If you cannot construct a finding meeting all three constraints, output exactly:
+       ## Compound Findings
+
+       No compound findings this run.
+
+  5. Do not restate single-signal findings already covered in the synthesis briefing.
+  6. Do not invent numbers or signals not present in the tool outputs.
+
+Output format (markdown, appended to the synthesis briefing):
+
+## Compound Findings
+
+### <Short title of finding 1>
+- **Signals:** <signal A>, <signal B>[, <signal C>...]
+- **Diff anchor:** <snapshot_diff field path>: yesterday=<value> today=<value> (or "no prior snapshot")
+- **Implication:** <one sentence explaining what the combination means that neither signal means alone>
+- **Recommendation:** <one short analyst action>
+
+### <Short title of finding 2>
+... (repeat as needed) ...
+
+Output ONLY the markdown section. No commentary, no preamble.
