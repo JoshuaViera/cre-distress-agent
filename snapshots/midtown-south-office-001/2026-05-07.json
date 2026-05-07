@@ -1,0 +1,165 @@
+{
+  "snapshot_version": "v2",
+  "captured_at": "2026-05-07T00:21:14.879662+00:00",
+  "deal_id": "midtown-south-office-001",
+  "tool_outputs": {
+    "violations": {
+      "bbl": "1008060001",
+      "open_violations_count": 0,
+      "severity_breakdown": {
+        "A": 0,
+        "B": 0,
+        "C": 0,
+        "I": 0
+      },
+      "most_recent_violation": null,
+      "distress_score": "none",
+      "sample_violations": [],
+      "source_url": "https://data.cityofnewyork.us/Housing-Development/Housing-Maintenance-Code-Violations/wvxf-dwi5?bbl=1008060001",
+      "note": "No HPD violations on file for this BBL."
+    },
+    "market_signals": {
+      "borough": "Manhattan",
+      "days_back": 90,
+      "min_sale_price": 1000000,
+      "sale_count": 500,
+      "median_price": 2000000.0,
+      "sample_sales": [
+        {
+          "document_id": "2026031800317001",
+          "doc_type": "DEED",
+          "sale_price": 1600000.0,
+          "recorded_date": "2026-03-31",
+          "address": "",
+          "borough_code": "",
+          "acris_url": "https://a836-acris.nyc.gov/DS/DocumentSearch/DocumentDetail?doc_id=2026031800317001"
+        },
+        {
+          "document_id": "2026032700907001",
+          "doc_type": "DEED",
+          "sale_price": 1545000.0,
+          "recorded_date": "2026-03-31",
+          "address": "240 EAST 47TH STREET",
+          "borough_code": "1",
+          "acris_url": "https://a836-acris.nyc.gov/DS/DocumentSearch/DocumentDetail?doc_id=2026032700907001"
+        },
+        {
+          "document_id": "2026033100385001",
+          "doc_type": "DEED",
+          "sale_price": 1201257.0,
+          "recorded_date": "2026-03-31",
+          "address": "",
+          "borough_code": "",
+          "acris_url": "https://a836-acris.nyc.gov/DS/DocumentSearch/DocumentDetail?doc_id=2026033100385001"
+        },
+        {
+          "document_id": "2026032700911001",
+          "doc_type": "DEED",
+          "sale_price": 3650000.0,
+          "recorded_date": "2026-03-31",
+          "address": "1018 LEXINGTON AVENUE",
+          "borough_code": "1",
+          "acris_url": "https://a836-acris.nyc.gov/DS/DocumentSearch/DocumentDetail?doc_id=2026032700911001"
+        },
+        {
+          "document_id": "2026033100307001",
+          "doc_type": "DEED",
+          "sale_price": 2300000.0,
+          "recorded_date": "2026-03-31",
+          "address": "",
+          "borough_code": "",
+          "acris_url": "https://a836-acris.nyc.gov/DS/DocumentSearch/DocumentDetail?doc_id=2026033100307001"
+        }
+      ],
+      "market_signal": "active",
+      "source_url": "https://data.cityofnewyork.us/resource/bnx9-e6tj.json?$where=recorded_borough='1'%20AND%20(doc_type='DEED'%20OR%20doc_type='DEEDO')%20AND%20document_amt%20>=%20'1000000'%20AND%20recorded_datetime%20>=%20'2026-02-06T00:21:14.000'&$limit=500&$order=recorded_datetime%20DESC"
+    },
+    "macro_signals": {
+      "macro_signal": "stable",
+      "as_of": "2026-05-07",
+      "lookback_days": 30,
+      "treasury_10y": {
+        "current_value": 4.43,
+        "prior_value": 4.35,
+        "current_date": "2026-05-05",
+        "prior_date": "2026-04-03",
+        "bps_change": 8,
+        "series_id": "DGS10"
+      },
+      "sofr": {
+        "current_value": 3.62,
+        "prior_value": 3.66,
+        "current_date": "2026-05-05",
+        "prior_date": "2026-04-02",
+        "bps_change": -4,
+        "series_id": "SOFR"
+      },
+      "narrative": "Over the last 30 days: 10Y rose 8 bps (now 4.43%); SOFR fell 4 bps (now 3.62%).",
+      "source_url_treasury_10y": "https://fred.stlouisfed.org/series/DGS10",
+      "source_url_sofr": "https://fred.stlouisfed.org/series/SOFR"
+    },
+    "leasing_comps": {
+      "observed_rent_psf": 68.0,
+      "source": "deal.demo_observations",
+      "provenance": "deal.demo_observations.observed_rent_psf (Three Midtown South office leases week of 2026-04-26 signed at $66-69/SF, weighted midpoint $68.)",
+      "sample_leases": [],
+      "csv_path": null
+    },
+    "underwriting": {
+      "deal_id": "midtown-south-office-001",
+      "assumptions_locked_at": "2026-04-25",
+      "drivers": [
+        {
+          "name": "observed_rent_psf",
+          "observed": 68.0,
+          "assumed": 74.0,
+          "unit": "$/SF",
+          "source_tool": "deal.demo_observations"
+        },
+        {
+          "name": "observed_rate_bps",
+          "observed": 8.0,
+          "assumed": null,
+          "unit": "bps change",
+          "source_tool": "macro_signals"
+        }
+      ],
+      "noi_delta_dollars": -180642,
+      "noi_assumed_dollars": 5200000,
+      "noi_observed_dollars": 5019358,
+      "irr_assumed_pct": 0.1352,
+      "irr_observed_pct": 0.1035,
+      "irr_delta_pct": -0.0316,
+      "irr_stated_in_deal_pct": 0.14,
+      "exit_value_delta_dollars": null,
+      "severity_hint": 5,
+      "narrative_inputs": {
+        "square_footage": 85000.0,
+        "assumed_rent_psf": 74.0,
+        "observed_rent_psf": 68.0,
+        "assumed_exit_cap": 0.06,
+        "observed_exit_cap": null,
+        "assumed_debt_rate": 0.045,
+        "observed_debt_rate": 0.0458,
+        "observed_rate_change_bps": 8,
+        "vacancy_rate": 0.08,
+        "annual_rent_rollover_pct": 0.385,
+        "ltv": 0.75,
+        "rent_growth": 0.03,
+        "hold_period_years": 5
+      }
+    },
+    "dispatch": {
+      "band": "green",
+      "edge_label": "auto_render",
+      "irr_observed_pct": 0.1035,
+      "irr_assumed_pct": 0.1352,
+      "irr_delta_pct": -0.0316,
+      "thresholds": {
+        "green_above": 0.1,
+        "red_below": 0.075
+      },
+      "dispatch_reason": "observed IRR 10.35% exceeds 10.0% green hurdle"
+    }
+  }
+}

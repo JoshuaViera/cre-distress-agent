@@ -1,18 +1,26 @@
-"""Smoke test: confirm Hy3 via OpenRouter responds."""
+"""Smoke test: round-trip a 'hello' through whatever model MODEL_ID points at.
+
+Honors the same MODEL_ID env var as agent.py so swapping to Claude is a
+one-line .env change for both. Falls back to the v1 Hy3 baseline if unset.
+"""
 import logging
 import os
+
 from dotenv import load_dotenv
 from strands import Agent
 from strands.models.litellm import LiteLLMModel
 
-# Silence LiteLLM's noisy logging
 logging.getLogger("LiteLLM").setLevel(logging.ERROR)
 
 load_dotenv()
 
-# LiteLLM reads OPENROUTER_API_KEY from env automatically
+DEFAULT_MODEL_ID = "openrouter/tencent/hy3-preview:free"
+model_id = os.getenv("MODEL_ID", DEFAULT_MODEL_ID)
+
+print(f"Round-tripping a 'hello' through: {model_id}")
+
 model = LiteLLMModel(
-    model_id="openrouter/tencent/hy3-preview:free",
+    model_id=model_id,
     params={"max_tokens": 4096, "temperature": 0.3},
 )
 
