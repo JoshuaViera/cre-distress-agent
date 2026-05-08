@@ -1,0 +1,372 @@
+"""Helper script to generate web/index.html."""
+from pathlib import Path
+
+html = r"""<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>CRE Deal Pulse v2</title>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+<script src="https://cdn.jsdelivr.net/npm/marked/marked.min.js"></script>
+<style>
+*{margin:0;padding:0;box-sizing:border-box}
+:root{
+  --bg:#050d1a;--surface:#0d1b2e;--surface2:#111f35;--border:#1e3a5f;
+  --text:#e2eeff;--muted:#5a7a9a;--accent:#00c8ff;
+  --green:#00e87a;--yellow:#ffd600;--red:#ff3b5c;
+}
+body{background:var(--bg);color:var(--text);font-family:Inter,sans-serif;height:100vh;display:flex;flex-direction:column;overflow:hidden}
+.header{display:flex;align-items:center;justify-content:space-between;padding:14px 24px;background:var(--surface);border-bottom:1px solid var(--border);flex-shrink:0}
+.logo{display:flex;align-items:center;gap:10px}
+.logo-dot{width:10px;height:10px;border-radius:50%;background:var(--accent);box-shadow:0 0 8px var(--accent)}
+.logo-title{font-size:16px;font-weight:700;color:var(--text)}
+.logo-sub{font-size:11px;color:var(--muted);margin-top:1px}
+.token-counter{font-family:"JetBrains Mono",monospace;font-size:11px;color:var(--muted);background:var(--surface2);border:1px solid var(--border);padding:5px 10px;border-radius:6px}
+.token-counter span{color:var(--accent)}
+.main{display:flex;flex:1;overflow:hidden}
+.sidebar{width:260px;background:var(--surface);border-right:1px solid var(--border);display:flex;flex-direction:column;flex-shrink:0}
+.sidebar-title{font-size:10px;font-weight:600;letter-spacing:1.5px;color:var(--muted);padding:16px 16px 8px;text-transform:uppercase}
+.deal-card{margin:4px 8px;padding:12px;border-radius:8px;border:1px solid transparent;cursor:pointer;transition:all .2s}
+.deal-card:hover{background:var(--surface2);border-color:var(--border)}
+.deal-card.active{background:rgba(0,200,255,.07);border-color:rgba(0,200,255,.3)}
+.deal-name{font-size:13px;font-weight:600;color:var(--text)}
+.deal-meta{font-size:11px;color:var(--muted);margin-top:3px}
+.deal-irr{font-size:11px;font-family:"JetBrains Mono",monospace;color:var(--accent);margin-top:4px}
+.sidebar-bottom{padding:12px 8px;margin-top:auto;border-top:1px solid var(--border)}
+.run-btn{width:100%;padding:12px;background:linear-gradient(135deg,#0066cc,#00c8ff);border:none;border-radius:8px;color:#fff;font-size:14px;font-weight:600;cursor:pointer;transition:all .2s;font-family:Inter,sans-serif}
+.run-btn:hover{transform:translateY(-1px);box-shadow:0 4px 20px rgba(0,200,255,.3)}
+.run-btn:disabled{opacity:.5;cursor:not-allowed;transform:none;box-shadow:none}
+.content{flex:1;display:flex;flex-direction:column;overflow:hidden}
+.band-bar{padding:14px 24px;background:var(--surface2);border-bottom:1px solid var(--border);display:flex;align-items:center;gap:16px;flex-shrink:0}
+.band-dot{width:14px;height:14px;border-radius:50%;background:var(--muted);transition:all .5s;flex-shrink:0}
+.band-dot.green{background:var(--green);box-shadow:0 0 12px var(--green)}
+.band-dot.yellow{background:var(--yellow);box-shadow:0 0 12px var(--yellow)}
+.band-dot.red{background:var(--red);box-shadow:0 0 12px var(--red);animation:pulse-red 1.5s infinite}
+@keyframes pulse-red{0%,100%{box-shadow:0 0 12px var(--red)}50%{box-shadow:0 0 28px var(--red),0 0 50px rgba(255,59,92,.4)}}
+.band-label{font-size:13px;font-weight:600;color:var(--muted)}
+.band-label.green{color:var(--green)}
+.band-label.yellow{color:var(--yellow)}
+.band-label.red{color:var(--red)}
+.band-reason{font-size:12px;color:var(--muted);font-family:"JetBrains Mono",monospace}
+.body-split{display:flex;flex:1;overflow:hidden}
+.tool-panel{width:300px;background:var(--surface);border-right:1px solid var(--border);display:flex;flex-direction:column;flex-shrink:0}
+.panel-header{padding:12px 16px;font-size:10px;font-weight:600;letter-spacing:1.5px;color:var(--muted);text-transform:uppercase;border-bottom:1px solid var(--border)}
+.tool-log{flex:1;overflow-y:auto;padding:8px}
+.tool-item{display:flex;align-items:flex-start;gap:10px;padding:8px;border-radius:6px;margin-bottom:4px;animation:fadeIn .3s ease}
+@keyframes fadeIn{from{opacity:0;transform:translateY(4px)}to{opacity:1;transform:none}}
+.tool-status{width:18px;height:18px;border-radius:50%;flex-shrink:0;margin-top:1px;display:flex;align-items:center;justify-content:center;font-size:10px;font-weight:700}
+.tool-status.running{border:2px solid var(--accent);animation:spin 1s linear infinite}
+@keyframes spin{to{transform:rotate(360deg)}}
+.tool-status.done{background:var(--green);color:#000}
+.tool-status.error{background:var(--red);color:#fff}
+.tool-name{font-size:12px;font-weight:500;color:var(--text)}
+.tool-detail{font-size:11px;color:var(--muted);margin-top:2px}
+.briefing-panel{flex:1;overflow-y:auto;padding:24px}
+.idle-state{display:flex;flex-direction:column;align-items:center;justify-content:center;height:100%;color:var(--muted);text-align:center;gap:12px}
+.idle-icon{font-size:48px;opacity:.3}
+.idle-state h3{font-size:16px;font-weight:500}
+.idle-state p{font-size:13px;max-width:300px;line-height:1.6}
+.briefing-content{animation:fadeIn .5s ease}
+.briefing-content h1{font-size:20px;font-weight:700;color:var(--text);margin-bottom:4px}
+.briefing-content h2{font-size:13px;font-weight:600;color:var(--accent);margin:20px 0 8px;text-transform:uppercase;letter-spacing:.5px}
+.briefing-content h3{font-size:13px;font-weight:600;color:var(--text);margin:14px 0 6px}
+.briefing-content p{font-size:13px;color:var(--text);line-height:1.7;margin-bottom:8px}
+.briefing-content blockquote{border-left:3px solid var(--accent);padding:8px 16px;margin:12px 0;background:rgba(0,200,255,.05);border-radius:0 6px 6px 0}
+.briefing-content ul,.briefing-content ol{padding-left:20px;margin-bottom:8px}
+.briefing-content li{font-size:13px;color:var(--text);line-height:1.7;margin-bottom:4px}
+.briefing-content strong{color:var(--accent);font-weight:600}
+.briefing-content table{width:100%;border-collapse:collapse;margin:12px 0;font-size:12px}
+.briefing-content th{background:var(--surface2);color:var(--muted);padding:8px 12px;text-align:left;font-weight:600;border-bottom:1px solid var(--border)}
+.briefing-content td{padding:8px 12px;border-bottom:1px solid rgba(30,58,95,.5);color:var(--text)}
+.briefing-content a{color:var(--accent);text-decoration:none}
+.briefing-content code{background:var(--surface2);padding:2px 6px;border-radius:4px;font-family:"JetBrains Mono",monospace;font-size:11px;color:var(--accent)}
+.briefing-content hr{border:none;border-top:1px solid var(--border);margin:16px 0}
+.llm-indicator{display:flex;align-items:center;gap:8px;padding:12px 16px;background:rgba(0,200,255,.05);border:1px solid rgba(0,200,255,.2);border-radius:8px;margin-bottom:16px}
+.llm-spinner{width:16px;height:16px;border:2px solid rgba(0,200,255,.3);border-top-color:var(--accent);border-radius:50%;animation:spin 1s linear infinite;flex-shrink:0}
+.llm-text{font-size:13px;color:var(--accent)}
+.modal-overlay{position:fixed;inset:0;background:rgba(0,0,0,.75);display:flex;align-items:center;justify-content:center;z-index:100;animation:fadeIn .2s ease}
+.modal{background:var(--surface);border:1px solid var(--red);border-radius:12px;padding:28px;max-width:480px;width:90%;box-shadow:0 20px 60px rgba(255,59,92,.2)}
+.modal-header{display:flex;align-items:center;gap:10px;margin-bottom:16px}
+.modal-title{font-size:16px;font-weight:700;color:var(--red)}
+.modal-reason{font-size:12px;color:var(--muted);margin-bottom:16px;font-family:"JetBrains Mono",monospace;padding:10px;background:var(--surface2);border-radius:6px;line-height:1.5}
+.modal-stats{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:20px}
+.stat-box{background:var(--surface2);border:1px solid var(--border);border-radius:6px;padding:10px}
+.stat-label{font-size:10px;color:var(--muted);text-transform:uppercase;letter-spacing:1px;margin-bottom:4px}
+.stat-value{font-size:16px;font-weight:700;font-family:"JetBrains Mono",monospace;color:var(--text)}
+.stat-value.red{color:var(--red)}
+.modal-actions{display:flex;flex-direction:column;gap:8px}
+.action-btn{padding:12px;border:1px solid;border-radius:8px;font-size:13px;font-weight:600;cursor:pointer;font-family:Inter,sans-serif;transition:all .2s;text-align:left;display:flex;align-items:center;gap:10px;background:transparent}
+.action-btn.confirm{border-color:var(--red);color:var(--red)}
+.action-btn.confirm:hover{background:rgba(255,59,92,.1)}
+.action-btn.downgrade{border-color:var(--yellow);color:var(--yellow)}
+.action-btn.downgrade:hover{background:rgba(255,214,0,.1)}
+.action-btn.abort-btn{border-color:var(--border);color:var(--muted)}
+.action-btn.abort-btn:hover{background:rgba(255,255,255,.05)}
+.action-key{display:inline-flex;align-items:center;justify-content:center;width:22px;height:22px;background:rgba(255,255,255,.1);border-radius:4px;font-size:12px;flex-shrink:0}
+</style>
+</head>
+<body>
+<div class="header">
+  <div class="logo">
+    <div class="logo-dot"></div>
+    <div>
+      <div class="logo-title">CRE Deal Pulse</div>
+      <div class="logo-sub">v2 &mdash; Claude Sonnet 4.6 &mdash; No Human in the Loop</div>
+    </div>
+  </div>
+  <div class="token-counter">Tokens &mdash; out: <span id="tok-out">0</span> &nbsp;/&nbsp; in: <span id="tok-in">0</span></div>
+</div>
+<div class="main">
+  <div class="sidebar">
+    <div class="sidebar-title">Deal Queue</div>
+    <div id="deal-list"></div>
+    <div class="sidebar-bottom">
+      <button class="run-btn" id="run-btn" onclick="startRun()">&#9654;&nbsp; Run Agent</button>
+    </div>
+  </div>
+  <div class="content">
+    <div class="band-bar">
+      <div class="band-dot" id="band-dot"></div>
+      <div class="band-label" id="band-label" style="color:var(--muted)">No band</div>
+      <div class="band-reason" id="band-reason">Select a deal and run the agent</div>
+    </div>
+    <div class="body-split">
+      <div class="tool-panel">
+        <div class="panel-header">Tool Execution Log</div>
+        <div class="tool-log" id="tool-log">
+          <div style="padding:20px;color:var(--muted);font-size:12px;text-align:center">Waiting for run&hellip;</div>
+        </div>
+      </div>
+      <div class="briefing-panel" id="briefing-panel">
+        <div class="idle-state">
+          <div class="idle-icon">&#127963;</div>
+          <h3>No briefing yet</h3>
+          <p>Select a deal from the sidebar and click Run Agent to scan live signals and generate a Claude briefing.</p>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+<div class="modal-overlay" id="checkpoint-modal" style="display:none">
+  <div class="modal">
+    <div class="modal-header">
+      <div class="band-dot red"></div>
+      <div class="modal-title">RED Band &mdash; Analyst Decision Required</div>
+    </div>
+    <div class="modal-reason" id="cp-reason"></div>
+    <div class="modal-stats">
+      <div class="stat-box"><div class="stat-label">IRR Assumed</div><div class="stat-value" id="cp-irr-a">-</div></div>
+      <div class="stat-box"><div class="stat-label">IRR Observed</div><div class="stat-value red" id="cp-irr-o">-</div></div>
+      <div class="stat-box"><div class="stat-label">IRR Delta</div><div class="stat-value red" id="cp-irr-d">-</div></div>
+      <div class="stat-box"><div class="stat-label">NOI Delta / yr</div><div class="stat-value red" id="cp-noi">-</div></div>
+    </div>
+    <div class="modal-actions">
+      <button class="action-btn confirm" onclick="sendCheckpoint('confirmed')">
+        <span class="action-key">Y</span> Confirm RED &mdash; proceed to synthesis as red
+      </button>
+      <button class="action-btn downgrade" onclick="sendCheckpoint('downgrade')">
+        <span class="action-key">D</span> Downgrade to YELLOW &mdash; re-route through advisory
+      </button>
+      <button class="action-btn abort-btn" onclick="sendCheckpoint('abort')">
+        <span class="action-key">Q</span> Abort &mdash; exit without producing a briefing
+      </button>
+    </div>
+  </div>
+</div>
+<script>
+let selectedDeal = null;
+let currentRunId = null;
+let eventSource  = null;
+
+async function loadDeals() {
+  const res = await fetch('/deals');
+  const deals = await res.json();
+  const list = document.getElementById('deal-list');
+  list.innerHTML = '';
+  deals.forEach((d, i) => {
+    const pct = (d.irr_assumed * 100).toFixed(1);
+    const el = document.createElement('div');
+    el.className = 'deal-card';
+    el.dataset.id = d.deal_id;
+    el.innerHTML = `<div class="deal-name">${d.deal_id}</div>
+      <div class="deal-meta">${d.submarket} &bull; ${d.asset_class} &bull; ${d.deal_stage}</div>
+      <div class="deal-irr">Assumed IRR: ${pct}%</div>`;
+    el.onclick = () => selectDeal(d, el);
+    list.appendChild(el);
+    if (i === 0) selectDeal(d, el);
+  });
+}
+
+function selectDeal(d, el) {
+  document.querySelectorAll('.deal-card').forEach(c => c.classList.remove('active'));
+  el.classList.add('active');
+  selectedDeal = d;
+}
+
+function setBand(band, reason) {
+  const dot = document.getElementById('band-dot');
+  const lbl = document.getElementById('band-label');
+  dot.className = 'band-dot' + (band ? ' ' + band : '');
+  lbl.className = 'band-label' + (band ? ' ' + band : '');
+  lbl.textContent = band ? band.toUpperCase() : 'Scanning...';
+  document.getElementById('band-reason').textContent = reason || '';
+}
+
+function addTool(name, detail, status) {
+  const log = document.getElementById('tool-log');
+  const id = 'tool-' + name.replace(/\s+/g, '-');
+  let el = document.getElementById(id);
+  if (!el) {
+    el = document.createElement('div');
+    el.id = id;
+    el.className = 'tool-item';
+    log.appendChild(el);
+  }
+  const icon = status === 'done' ? '&#10003;' : status === 'error' ? '!' : '';
+  el.innerHTML = `<div class="tool-status ${status}">${icon}</div>
+    <div><div class="tool-name">${name}</div>
+    <div class="tool-detail">${detail || ''}</div></div>`;
+  log.scrollTop = log.scrollHeight;
+}
+
+function setLLMIndicator(msg) {
+  let ind = document.getElementById('llm-ind');
+  const panel = document.getElementById('briefing-panel');
+  if (msg) {
+    if (!ind) {
+      ind = document.createElement('div');
+      ind.id = 'llm-ind';
+      ind.className = 'llm-indicator';
+      panel.insertBefore(ind, panel.firstChild);
+    }
+    ind.innerHTML = `<div class="llm-spinner"></div><div class="llm-text">${msg}</div>`;
+  } else if (ind) {
+    ind.remove();
+  }
+}
+
+function appendBriefing(markdown) {
+  const panel = document.getElementById('briefing-panel');
+  let bc = document.getElementById('briefing-content');
+  if (!bc) {
+    panel.innerHTML = '';
+    bc = document.createElement('div');
+    bc.id = 'briefing-content';
+    bc.className = 'briefing-content';
+    panel.appendChild(bc);
+  }
+  bc.innerHTML += marked.parse(markdown);
+  panel.scrollTop = panel.scrollHeight;
+}
+
+function updateTokens(t) {
+  if (!t) return;
+  document.getElementById('tok-out').textContent = (t.output || 0).toLocaleString();
+  document.getElementById('tok-in').textContent = (t.input || 0).toLocaleString();
+}
+
+async function startRun() {
+  if (!selectedDeal) return;
+  const btn = document.getElementById('run-btn');
+  btn.disabled = true;
+  currentRunId = null;
+  document.getElementById('tool-log').innerHTML = '';
+  document.getElementById('briefing-panel').innerHTML = '';
+  setBand(null, 'Scanning signals...');
+
+  const res = await fetch('/run', {
+    method: 'POST',
+    headers: {'Content-Type': 'application/json'},
+    body: JSON.stringify({deal_id: selectedDeal.deal_id})
+  });
+  const data = await res.json();
+  if (data.error) { alert(data.error); btn.disabled = false; return; }
+  currentRunId = data.run_id;
+
+  if (eventSource) eventSource.close();
+  eventSource = new EventSource('/stream/' + currentRunId);
+  eventSource.onmessage = e => handleEvent(JSON.parse(e.data));
+  eventSource.onerror = () => { eventSource.close(); btn.disabled = false; };
+}
+
+function handleEvent(ev) {
+  const btn = document.getElementById('run-btn');
+  if (ev.type === 'tool_start') { addTool(ev.data.tool, ev.data.detail, 'running'); }
+  else if (ev.type === 'tool_done') { addTool(ev.data.tool, null, 'done'); }
+  else if (ev.type === 'band') { setBand(ev.data.band, ev.data.reason); }
+  else if (ev.type === 'checkpoint') { showCheckpoint(ev.data); }
+  else if (ev.type === 'checkpoint_resolved') {
+    hideCheckpoint();
+    setBand(ev.data.decision === 'downgrade' ? 'yellow' : 'red', ev.data.outcome);
+  }
+  else if (ev.type === 'llm_start') { setLLMIndicator(ev.data.message); }
+  else if (ev.type === 'synthesis') {
+    setLLMIndicator(null);
+    appendBriefing(ev.data.content);
+    updateTokens(ev.data.tokens);
+  }
+  else if (ev.type === 'compound') {
+    appendBriefing(ev.data.content);
+    updateTokens(ev.data.tokens);
+  }
+  else if (ev.type === 'abort') {
+    setLLMIndicator(null);
+    hideCheckpoint();
+    document.getElementById('briefing-panel').innerHTML =
+      '<div class="idle-state"><div class="idle-icon">&#128683;</div><h3>Run Aborted</h3><p>' + ev.data.message + '</p></div>';
+    btn.disabled = false;
+  }
+  else if (ev.type === 'error') {
+    setLLMIndicator(null);
+    document.getElementById('briefing-panel').innerHTML =
+      '<div style="padding:20px;color:#ff3b5c;font-family:monospace;font-size:12px;white-space:pre-wrap">' + ev.data.message + '</div>';
+    btn.disabled = false;
+  }
+  else if (ev.type === 'complete') {
+    setLLMIndicator(null);
+    updateTokens(ev.data.tokens);
+    btn.disabled = false;
+    eventSource.close();
+  }
+  else if (ev.type === 'done') {
+    btn.disabled = false;
+    if (eventSource) eventSource.close();
+  }
+}
+
+function showCheckpoint(data) {
+  const fmt = v => v != null ? (v * 100).toFixed(2) + '%' : 'n/a';
+  const fmtN = v => v != null ? '$' + Math.abs(v).toLocaleString() + (v < 0 ? ' loss' : '') : 'n/a';
+  document.getElementById('cp-reason').textContent = data.reason || '';
+  document.getElementById('cp-irr-a').textContent = fmt(data.irr_assumed);
+  document.getElementById('cp-irr-o').textContent = fmt(data.irr_observed);
+  const delta = data.irr_observed != null && data.irr_assumed != null
+    ? ((data.irr_observed - data.irr_assumed) * 100).toFixed(2) + ' pp' : 'n/a';
+  document.getElementById('cp-irr-d').textContent = delta;
+  document.getElementById('cp-noi').textContent = fmtN(data.noi_delta);
+  document.getElementById('checkpoint-modal').style.display = 'flex';
+}
+
+function hideCheckpoint() {
+  document.getElementById('checkpoint-modal').style.display = 'none';
+}
+
+async function sendCheckpoint(decision) {
+  if (!currentRunId) return;
+  await fetch('/checkpoint/' + currentRunId, {
+    method: 'POST',
+    headers: {'Content-Type': 'application/json'},
+    body: JSON.stringify({decision})
+  });
+  hideCheckpoint();
+}
+
+loadDeals();
+</script>
+</body>
+</html>"""
+
+out = Path(__file__).parent / "index.html"
+out.write_text(html, encoding="utf-8")
+print(f"Written {out} — {len(html.splitlines())} lines")

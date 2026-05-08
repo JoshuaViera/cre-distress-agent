@@ -1,0 +1,238 @@
+"""Generate the CRE Deal Pulse v2 presentation — 5 slides."""
+from pathlib import Path
+
+html = r"""<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>CRE Deal Pulse — v2 Presentation</title>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+<style>
+*{margin:0;padding:0;box-sizing:border-box}
+:root{--bg:#050d1a;--surface:#0d1b2e;--surface2:#111f35;--border:#1e3a5f;--text:#e2eeff;--muted:#5a7a9a;--accent:#00c8ff;--green:#00e87a;--yellow:#ffd600;--red:#ff3b5c}
+body{background:var(--bg);color:var(--text);font-family:Inter,sans-serif;overflow:hidden;height:100vh;display:flex;align-items:center;justify-content:center}
+.deck{width:100%;height:100%;position:relative}
+.slide{position:absolute;inset:0;display:flex;flex-direction:column;justify-content:center;padding:60px 80px;opacity:0;pointer-events:none;transition:opacity .5s ease,transform .5s ease;transform:translateX(40px)}
+.slide.active{opacity:1;pointer-events:auto;transform:none}
+.slide.prev{transform:translateX(-40px)}
+.slide-number{position:absolute;top:24px;right:40px;font-size:12px;color:var(--muted);font-family:"JetBrains Mono",monospace}
+.tag{display:inline-block;padding:4px 12px;border-radius:20px;font-size:11px;font-weight:600;letter-spacing:1px;text-transform:uppercase;margin-bottom:16px}
+.tag.blue{background:rgba(0,200,255,.12);color:var(--accent);border:1px solid rgba(0,200,255,.25)}
+.tag.red{background:rgba(255,59,92,.12);color:var(--red);border:1px solid rgba(255,59,92,.25)}
+.tag.green{background:rgba(0,232,122,.12);color:var(--green);border:1px solid rgba(0,232,122,.25)}
+.tag.yellow{background:rgba(255,214,0,.12);color:var(--yellow);border:1px solid rgba(255,214,0,.25)}
+h1{font-size:48px;font-weight:800;line-height:1.15;margin-bottom:12px;background:linear-gradient(135deg,#e2eeff,#00c8ff);-webkit-background-clip:text;-webkit-text-fill-color:transparent}
+h2{font-size:28px;font-weight:700;margin-bottom:20px;color:var(--text)}
+h3{font-size:16px;font-weight:600;margin-bottom:10px;color:var(--accent)}
+p{font-size:17px;color:var(--muted);line-height:1.7;max-width:720px}
+.subtitle{font-size:20px;color:var(--muted);max-width:700px;line-height:1.6;margin-bottom:28px}
+.killer-quote{border-left:4px solid var(--accent);padding:16px 20px;margin:20px 0;background:rgba(0,200,255,.04);border-radius:0 8px 8px 0;max-width:800px}
+.killer-quote p{font-size:16px;color:var(--text);font-style:italic;line-height:1.7}
+.grid3{display:grid;grid-template-columns:1fr 1fr 1fr;gap:20px;margin-top:20px;max-width:1000px}
+.grid2{display:grid;grid-template-columns:1fr 1fr;gap:20px;margin-top:20px;max-width:900px}
+.card{background:var(--surface);border:1px solid var(--border);border-radius:12px;padding:20px}
+.card h3{color:var(--accent);font-size:12px;text-transform:uppercase;letter-spacing:1px;margin-bottom:6px}
+.card p{font-size:13px;color:var(--muted);line-height:1.6}
+.card .stat{font-size:28px;font-weight:700;font-family:"JetBrains Mono",monospace;margin-bottom:6px}
+.card .stat.green{color:var(--green)}
+.card .stat.red{color:var(--red)}
+.card .stat.accent{color:var(--accent)}
+.flow{display:flex;align-items:center;gap:10px;margin:16px 0;flex-wrap:wrap}
+.flow-step{background:var(--surface);border:1px solid var(--border);border-radius:8px;padding:8px 14px;font-size:12px;font-weight:500}
+.flow-step.highlight{border-color:var(--accent);background:rgba(0,200,255,.08);color:var(--accent)}
+.flow-step.red{border-color:var(--red);background:rgba(255,59,92,.08);color:var(--red)}
+.flow-arrow{color:var(--muted);font-size:16px}
+.team-grid{display:grid;grid-template-columns:repeat(5,1fr);gap:12px;margin-top:20px;max-width:1000px}
+.team-card{background:var(--surface);border:1px solid var(--border);border-radius:10px;padding:14px;text-align:center}
+.team-name{font-size:13px;font-weight:600;color:var(--text);margin-bottom:3px}
+.team-role{font-size:10px;color:var(--muted);line-height:1.4}
+ul.clean{list-style:none;padding:0}
+ul.clean li{font-size:14px;color:var(--text);padding:6px 0;border-bottom:1px solid rgba(30,58,95,.3);display:flex;align-items:flex-start;gap:8px}
+ul.clean li:last-child{border-bottom:none}
+ul.clean .bullet{color:var(--accent);font-weight:700;flex-shrink:0}
+.vs-table{width:100%;max-width:900px;margin-top:16px;border-collapse:collapse}
+.vs-table th,.vs-table td{padding:10px 14px;text-align:left;font-size:13px;border-bottom:1px solid var(--border)}
+.vs-table th{color:var(--muted);font-weight:600;text-transform:uppercase;letter-spacing:1px;font-size:10px}
+.vs-table .old{color:var(--muted);text-decoration:line-through}
+.vs-table .new{color:var(--green);font-weight:600}
+.nav{position:fixed;bottom:24px;right:40px;display:flex;gap:8px;z-index:10}
+.nav button{width:36px;height:36px;border-radius:50%;border:1px solid var(--border);background:var(--surface);color:var(--text);font-size:16px;cursor:pointer;display:flex;align-items:center;justify-content:center;transition:all .2s}
+.nav button:hover{background:rgba(0,200,255,.1);border-color:var(--accent)}
+.progress{position:fixed;bottom:0;left:0;height:3px;background:var(--accent);transition:width .4s ease;z-index:10}
+</style>
+</head>
+<body>
+<div class="deck" id="deck">
+
+<!-- SLIDE 1: TITLE -->
+<div class="slide active" id="s0">
+  <div class="slide-number">01 / 05</div>
+  <span class="tag blue">Pursuit AI-Native Fellowship &bull; Cycle 3</span>
+  <h1>CRE Deal Pulse</h1>
+  <p class="subtitle">An AI agent that watches live market signals against your deal underwriting and tells you — in plain English — when reality is breaking your assumptions.</p>
+  <div class="killer-quote">
+    <p>"Market rent dropped to $62/SF. Your deal assumes $74. NOI falls by $469K and IRR drops from 13.5% to 5.2%. Re-underwrite before proceeding to LOI."</p>
+  </div>
+  <div class="team-grid">
+    <div class="team-card"><div class="team-name">Joshua Viera</div><div class="team-role">Eng Lead</div></div>
+    <div class="team-card"><div class="team-name">Pedro Martins</div><div class="team-role">Market Signals</div></div>
+    <div class="team-card"><div class="team-name">Elliot Chen</div><div class="team-role">Macro Signals</div></div>
+    <div class="team-card"><div class="team-name">Kevin Natera</div><div class="team-role">Slides &bull; QA</div></div>
+    <div class="team-card"><div class="team-name">Gamaliel Leguista</div><div class="team-role">Integration &bull; Presenting</div></div>
+  </div>
+</div>
+
+<!-- SLIDE 2: THE PROBLEM -->
+<div class="slide" id="s1">
+  <div class="slide-number">02 / 05</div>
+  <span class="tag red">The Problem</span>
+  <h2>Five tabs. One tired analyst. Signals caught too late.</h2>
+  <p>A junior CRE analyst spends 2-3 hours daily refreshing CoStar, FRED, and city portals — checking if pipeline deals still pencil. Integration happens in their head. Material changes get caught late.</p>
+  <div class="grid3" style="margin-top:24px">
+    <div class="card">
+      <h3>Cost of a Miss</h3>
+      <div class="stat red">~$10M</div>
+      <p>A $12/SF rent drift on 85K SF is ~$470K/yr in NOI. At a 5.5% cap, that's nearly $10M in value — often caught after LOI.</p>
+    </div>
+    <div class="card">
+      <h3>Daily Manual Scans</h3>
+      <div class="stat accent">3 hrs/day</div>
+      <p>HPD violations, ACRIS comps, FRED rates — all by hand, across multiple tabs, every morning before standup.</p>
+    </div>
+    <div class="card">
+      <h3>No Signal Integration</h3>
+      <div class="stat red">0</div>
+      <p>No system connects "rates moved" to "your IRR dropped 3 points." That math lives in the analyst's head.</p>
+    </div>
+  </div>
+</div>
+
+<!-- SLIDE 3: THE SOLUTION — V1 to V2 -->
+<div class="slide" id="s2">
+  <div class="slide-number">03 / 05</div>
+  <span class="tag green">The Solution</span>
+  <h2>Seven tools. Deterministic math. Claude writes — never scores.</h2>
+  <div class="flow">
+    <div class="flow-step">Deal Profile</div><div class="flow-arrow">&#8594;</div>
+    <div class="flow-step">HPD</div><div class="flow-arrow">&#8594;</div>
+    <div class="flow-step">ACRIS</div><div class="flow-arrow">&#8594;</div>
+    <div class="flow-step">FRED</div><div class="flow-arrow">&#8594;</div>
+    <div class="flow-step">Leasing Comps</div><div class="flow-arrow">&#8594;</div>
+    <div class="flow-step highlight">Underwriting Math</div><div class="flow-arrow">&#8594;</div>
+    <div class="flow-step highlight">Dispatch (GREEN/YELLOW/RED)</div><div class="flow-arrow">&#8594;</div>
+    <div class="flow-step red">Checkpoint?</div><div class="flow-arrow">&#8594;</div>
+    <div class="flow-step">Claude Briefing</div>
+  </div>
+  <table class="vs-table">
+    <tr><th>Feedback from v1</th><th>What we fixed in v2</th></tr>
+    <tr><td class="old">LLM assigns severity 1-5 (unreliable)</td><td class="new">Deterministic dispatch on absolute IRR</td></tr>
+    <tr><td class="old">Binary yes/no checkpoint</td><td class="new">Three outcomes: Confirm / Downgrade / Abort</td></tr>
+    <tr><td class="old">No memory between runs</td><td class="new">Snapshot diffs — "what changed since yesterday"</td></tr>
+    <tr><td class="old">Signals treated independently</td><td class="new">Compound findings: cross-signal reasoning (2+ sources)</td></tr>
+    <tr><td class="old">Hy3 free tier (workarounds needed)</td><td class="new">Claude Sonnet 4.6 — clean, reliable synthesis</td></tr>
+    <tr><td class="old">No test suite</td><td class="new">58 hermetic pytest cases, &lt;1 second, no API keys</td></tr>
+  </table>
+</div>
+
+<!-- SLIDE 4: LIVE DEMO -->
+<div class="slide" id="s3">
+  <div class="slide-number">04 / 05</div>
+  <span class="tag yellow">Live Demo</span>
+  <h1>Let's run it.</h1>
+  <p class="subtitle">Two deals. One hits RED — you'll see the checkpoint fire and Claude's full briefing with compound findings. The other stays GREEN — auto-renders without pause.</p>
+  <div class="grid2" style="margin-top:20px">
+    <div class="card" style="border-color:var(--red)">
+      <h3 style="color:var(--red)">Midtown South Office</h3>
+      <div class="stat red">5.2% IRR</div>
+      <p>Assumed: $74/SF. Observed: $62/SF. NOI drops $469K. Band: RED. Checkpoint fires. Analyst confirms. Claude produces killer-quote briefing.</p>
+    </div>
+    <div class="card" style="border-color:var(--green)">
+      <h3 style="color:var(--green)">Bronx Multifamily</h3>
+      <div class="stat green">&gt;10% IRR</div>
+      <p>Assumed: $28/SF. Observed: $27.50/SF. Minimal drift. Band: GREEN. Auto-renders informational briefing — no human needed.</p>
+    </div>
+  </div>
+  <p style="margin-top:20px;font-size:16px;color:var(--accent)">&#9654;&nbsp; Opening the web UI now...</p>
+</div>
+
+<!-- SLIDE 5: OUTCOMES + NEXT -->
+<div class="slide" id="s4">
+  <div class="slide-number">05 / 05</div>
+  <span class="tag green">Outcomes &amp; Roadmap</span>
+  <h2>What we shipped. What's next.</h2>
+  <div class="grid3" style="margin-top:16px">
+    <div class="card">
+      <h3>Test Coverage</h3>
+      <div class="stat accent">58</div>
+      <p>Hermetic tests. No API keys. No network. Under 1 second.</p>
+    </div>
+    <div class="card">
+      <h3>Cost Per Run</h3>
+      <div class="stat accent">&lt;$0.02</div>
+      <p>~5K output tokens across 2 Claude calls. Full briefing + compound findings.</p>
+    </div>
+    <div class="card">
+      <h3>Live Data Sources</h3>
+      <div class="stat accent">4</div>
+      <p>HPD, ACRIS, FRED, leasing comps. No paid subscriptions required.</p>
+    </div>
+  </div>
+  <div class="grid2" style="margin-top:16px">
+    <div>
+      <h3>Shipped (v2)</h3>
+      <ul class="clean">
+        <li><span class="bullet">&#10003;</span> Deterministic dispatch — math is the scorer</li>
+        <li><span class="bullet">&#10003;</span> Three-outcome human checkpoint with audit log</li>
+        <li><span class="bullet">&#10003;</span> Claude synthesis + compound findings</li>
+        <li><span class="bullet">&#10003;</span> Day-over-day snapshot diffs</li>
+        <li><span class="bullet">&#10003;</span> Web UI with live streaming</li>
+      </ul>
+    </div>
+    <div>
+      <h3>Roadmap (v3)</h3>
+      <ul class="clean">
+        <li><span class="bullet">&#9656;</span> Analyst memory across runs</li>
+        <li><span class="bullet">&#9656;</span> Smart planner — scan only relevant sources</li>
+        <li><span class="bullet">&#9656;</span> Slack / email delivery</li>
+        <li><span class="bullet">&#9656;</span> Multi-deal portfolio view</li>
+        <li><span class="bullet">&#9656;</span> Tenant credit watch (SEC EDGAR)</li>
+      </ul>
+    </div>
+  </div>
+</div>
+
+</div><!-- /deck -->
+
+<div class="progress" id="progress" style="width:20%"></div>
+<div class="nav">
+  <button onclick="prev()" title="Previous">&#8249;</button>
+  <button onclick="next()" title="Next">&#8250;</button>
+</div>
+
+<script>
+let current = 0;
+const total = document.querySelectorAll('.slide').length;
+function show(n) {
+  document.querySelectorAll('.slide').forEach((s, i) => {
+    s.classList.remove('active', 'prev');
+    if (i === n) s.classList.add('active');
+    else if (i < n) s.classList.add('prev');
+  });
+  current = n;
+  document.getElementById('progress').style.width = ((n + 1) / total * 100) + '%';
+}
+function next() { if (current < total - 1) show(current + 1); }
+function prev() { if (current > 0) show(current - 1); }
+document.addEventListener('keydown', e => {
+  if (e.key === 'ArrowRight' || e.key === ' ') { e.preventDefault(); next(); }
+  if (e.key === 'ArrowLeft') { e.preventDefault(); prev(); }
+});
+show(0);
+</script>
+</body>
+</html>"""
+
+out = Path(__file__).parent / "slides.html"
+out.write_text(html, encoding="utf-8")
+print(f"Written {out} -- {len(html.splitlines())} lines")
