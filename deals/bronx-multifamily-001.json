@@ -1,0 +1,39 @@
+{
+  "deal_id": "bronx-multifamily-001",
+  "property": {
+    "address": "1200 Grand Concourse, Bronx, NY 10456",
+    "bbl": "2024500001",
+    "borough": "2",
+    "submarket": "South Bronx",
+    "asset_class": "multifamily",
+    "square_footage": 120000,
+    "top_tenants": [
+      "Residential"
+    ]
+  },
+  "deal_stage": "LOI",
+  "underwriting": {
+    "market_rent_psf": 28.0,
+    "in_place_rent_psf": 26.5,
+    "vacancy_rate": 0.04,
+    "going_in_cap": 0.06,
+    "exit_cap": 0.065,
+    "rent_growth": 0.025,
+    "hold_period_years": 5,
+    "noi": 2500000,
+    "irr": 0.12
+  },
+  "financing": {
+    "ltv": 0.65,
+    "debt_rate": 0.05
+  },
+  "market_dynamics": {
+    "annual_rent_rollover_pct": 0.2
+  },
+  "demo_observations": {
+    "observed_rent_psf": 27.50,
+    "_note": "GREEN-band demo scenario: Bronx multifamily rent holding steady. Observed comps print at $27.50/SF. Deal underwritten at $28.00/SF. Minimal drift.",
+    "_simulated_signal": "Three South Bronx multifamily leases week of 2026-05-05 at $27.50/SF range. Submarket occupancy strong at 96%."
+  },
+  "assumptions_locked_at": "2026-04-25"
+}

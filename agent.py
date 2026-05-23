@@ -52,7 +52,7 @@ try:
 except Exception:
     pass
 
-load_dotenv()
+load_dotenv(override=True)
 
 REPO_ROOT = Path(__file__).resolve().parent
 DEFAULT_DEAL_PATH = REPO_ROOT / "deals" / "midtown-south-office-001.json"

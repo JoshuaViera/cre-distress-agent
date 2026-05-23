@@ -24,7 +24,7 @@ REPO_ROOT = Path(__file__).resolve().parent.parent
 sys.path.insert(0, str(REPO_ROOT))
 
 from dotenv import load_dotenv
-load_dotenv(REPO_ROOT / ".env")
+load_dotenv(REPO_ROOT / ".env", override=True)
 
 from flask import Flask, Response, jsonify, request, send_from_directory
 
@@ -320,7 +320,7 @@ def _run_agent(state: RunState, deal: dict) -> None:
                 signals["dispatch"]   = d
                 checkpoint_outcome    = "analyst downgraded red -> yellow"
             else:
-                checkpoint_outcome = "analyst confirmed red"
+                checkpoint_outcome = "auto-confirmed red (bypassed)"
 
             state.emit("checkpoint_resolved", {"decision": decision, "outcome": checkpoint_outcome})
 

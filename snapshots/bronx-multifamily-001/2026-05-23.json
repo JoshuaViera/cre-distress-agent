@@ -1,0 +1,159 @@
+{
+  "snapshot_version": "v2",
+  "captured_at": "2026-05-23T02:48:49.428980+00:00",
+  "deal_id": "bronx-multifamily-001",
+  "tool_outputs": {
+    "violations": {
+      "bbl": "2024500001",
+      "open_violations_count": 100,
+      "severity_breakdown": {
+        "A": 19,
+        "B": 73,
+        "C": 8,
+        "I": 0
+      },
+      "most_recent_violation": "2016-08-03T00:00:00.000",
+      "distress_score": "high",
+      "sample_violations": [
+        {
+          "class": "A",
+          "description": "SECTION 53, 187, 231 M/D LAW AND DEPARTMENT RULES AND REGULATIONS. PROVIDE A SHOE PROPERLY SECURED TO BOTTOM OF STRING OF DROPLADDER AT SOUTH ONE AT NORTH SIDE OF BUILDING AT FIRE ESCAPE",
+          "inspection_date": "2015-10-17T00:00:00.000",
+          "current_status": "VIOLATION CLOSED"
+        },
+        {
+          "class": "A",
+          "description": "SECTION 300 M/D LAW FILE PLANS AND APPLICATION AND LEGALIZE THE FOLLOWING ALTERATION OR RESTORE TO THE LEGAL CONDITION EXISTING PRIOR TO THE MAKING OF SAID ALTERATION SHEETROCK PARTITION WITH STUDS AN",
+          "inspection_date": "2016-08-03T00:00:00.000",
+          "current_status": "VIOLATION CLOSED"
+        },
+        {
+          "class": "B",
+          "description": "SECTION 27-2081 ADM CODE DISCONTINUE USE OF ROOMS FOR LIVING, DISCONNECT PLUMBING FIXTURES AND PROPERLY SEAL PIPE CONNECTIONS AT BATHROOM WASH BASIN, WATER CLOSET BATHTUB IN THE OPEN SPACE LOCATED AT ",
+          "inspection_date": "2004-05-14T00:00:00.000",
+          "current_status": "VIOLATION CLOSED"
+        },
+        {
+          "class": "C",
+          "description": "SECTION 27-2056.6 ADM CODE - CORRECT THE LEAD-BASED PAINT HAZARD - PRESUMED LEAD PAINT THAT IS PEELING OR ON A DETERIORATED SUBSURFACE USING WORK PRACTICES SET FORTH IN 28 RCNY ?11-06(B)(2) 1st DOOR F",
+          "inspection_date": "2010-08-12T00:00:00.000",
+          "current_status": "VIOLATION CLOSED"
+        },
+        {
+          "class": "C",
+          "description": "SECTION 27-2056.6 ADM CODE - CORRECT THE LEAD-BASED PAINT HAZARD - PAINT THAT TESTED POSITIVE FOR LEAD CONTENT AND THAT IS PEELING OR ON A DETERIORATED SUBSURFACE - USING WORK PRACTICES SET FORTH IN 2",
+          "inspection_date": "2012-08-05T00:00:00.000",
+          "current_status": "VIOLATION CLOSED"
+        }
+      ],
+      "source_url": "https://data.cityofnewyork.us/Housing-Development/Housing-Maintenance-Code-Violations/wvxf-dwi5?bbl=2024500001"
+    },
+    "market_signals": {
+      "borough": "Bronx",
+      "days_back": 90,
+      "min_sale_price": 1000000,
+      "sale_count": 1,
+      "median_price": 1100000.0,
+      "sample_sales": [
+        {
+          "document_id": "2026031001070001",
+          "doc_type": "DEED",
+          "sale_price": 1100000.0,
+          "recorded_date": "2026-03-18",
+          "address": "2153 MAPES AV",
+          "borough_code": "2",
+          "acris_url": "https://a836-acris.nyc.gov/DS/DocumentSearch/DocumentDetail?doc_id=2026031001070001"
+        }
+      ],
+      "market_signal": "slow",
+      "source_url": "https://data.cityofnewyork.us/resource/bnx9-e6tj.json?$where=recorded_borough='2'%20AND%20(doc_type='DEED'%20OR%20doc_type='DEEDO')%20AND%20document_amt%20>=%20'1000000'%20AND%20recorded_datetime%20>=%20'2026-02-22T02:48:44.000'&$limit=500&$order=recorded_datetime%20DESC"
+    },
+    "macro_signals": {
+      "macro_signal": "rates_moved",
+      "as_of": "2026-05-23",
+      "lookback_days": 30,
+      "treasury_10y": {
+        "current_value": 4.57,
+        "prior_value": 4.3,
+        "current_date": "2026-05-21",
+        "prior_date": "2026-04-21",
+        "bps_change": 27,
+        "series_id": "DGS10"
+      },
+      "sofr": {
+        "current_value": 3.51,
+        "prior_value": 3.63,
+        "current_date": "2026-05-21",
+        "prior_date": "2026-04-21",
+        "bps_change": -12,
+        "series_id": "SOFR"
+      },
+      "narrative": "Over the last 30 days: 10Y rose 27 bps (now 4.57%); SOFR fell 12 bps (now 3.51%).",
+      "source_url_treasury_10y": "https://fred.stlouisfed.org/series/DGS10",
+      "source_url_sofr": "https://fred.stlouisfed.org/series/SOFR"
+    },
+    "leasing_comps": {
+      "observed_rent_psf": 27.5,
+      "source": "deal.demo_observations",
+      "provenance": "deal.demo_observations.observed_rent_psf (Three South Bronx multifamily leases week of 2026-05-05 at $27.50/SF range. Submarket occupancy strong at 96%.)",
+      "sample_leases": [],
+      "csv_path": null
+    },
+    "underwriting": {
+      "deal_id": "bronx-multifamily-001",
+      "assumptions_locked_at": "2026-04-25",
+      "drivers": [
+        {
+          "name": "observed_rent_psf",
+          "observed": 27.5,
+          "assumed": 28.0,
+          "unit": "$/SF",
+          "source_tool": "deal.demo_observations"
+        },
+        {
+          "name": "observed_rate_bps",
+          "observed": 27.0,
+          "assumed": null,
+          "unit": "bps change",
+          "source_tool": "macro_signals"
+        }
+      ],
+      "noi_delta_dollars": -11520,
+      "noi_assumed_dollars": 2500000,
+      "noi_observed_dollars": 2488480,
+      "irr_assumed_pct": 0.1069,
+      "irr_observed_pct": 0.0992,
+      "irr_delta_pct": -0.0077,
+      "irr_stated_in_deal_pct": 0.12,
+      "exit_value_delta_dollars": null,
+      "severity_hint": 3,
+      "narrative_inputs": {
+        "square_footage": 120000.0,
+        "assumed_rent_psf": 28.0,
+        "observed_rent_psf": 27.5,
+        "assumed_exit_cap": 0.065,
+        "observed_exit_cap": null,
+        "assumed_debt_rate": 0.05,
+        "observed_debt_rate": 0.052700000000000004,
+        "observed_rate_change_bps": 27,
+        "vacancy_rate": 0.04,
+        "annual_rent_rollover_pct": 0.2,
+        "ltv": 0.65,
+        "rent_growth": 0.025,
+        "hold_period_years": 5
+      }
+    },
+    "dispatch": {
+      "band": "yellow",
+      "edge_label": "advisory",
+      "irr_observed_pct": 0.0992,
+      "irr_assumed_pct": 0.1069,
+      "irr_delta_pct": -0.0077,
+      "thresholds": {
+        "green_above": 0.1,
+        "red_below": 0.075
+      },
+      "dispatch_reason": "observed IRR 9.92% sits in watch band (7.5%-10.0%)"
+    }
+  }
+}

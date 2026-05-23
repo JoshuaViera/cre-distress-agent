@@ -1,6 +1,6 @@
 {
   "snapshot_version": "v2",
-  "captured_at": "2026-05-07T23:25:43.165786+00:00",
+  "captured_at": "2026-05-07T00:21:14.879662+00:00",
   "deal_id": "midtown-south-office-001",
   "tool_outputs": {
     "violations": {
@@ -72,36 +72,36 @@
         }
       ],
       "market_signal": "active",
-      "source_url": "https://data.cityofnewyork.us/resource/bnx9-e6tj.json?$where=recorded_borough='1'%20AND%20(doc_type='DEED'%20OR%20doc_type='DEEDO')%20AND%20document_amt%20>=%20'1000000'%20AND%20recorded_datetime%20>=%20'2026-02-06T23:25:39.000'&$limit=500&$order=recorded_datetime%20DESC"
+      "source_url": "https://data.cityofnewyork.us/resource/bnx9-e6tj.json?$where=recorded_borough='1'%20AND%20(doc_type='DEED'%20OR%20doc_type='DEEDO')%20AND%20document_amt%20>=%20'1000000'%20AND%20recorded_datetime%20>=%20'2026-02-06T00:21:14.000'&$limit=500&$order=recorded_datetime%20DESC"
     },
     "macro_signals": {
       "macro_signal": "stable",
       "as_of": "2026-05-07",
       "lookback_days": 30,
       "treasury_10y": {
-        "current_value": 4.36,
-        "prior_value": 4.34,
-        "current_date": "2026-05-06",
-        "prior_date": "2026-04-06",
-        "bps_change": 2,
+        "current_value": 4.43,
+        "prior_value": 4.35,
+        "current_date": "2026-05-05",
+        "prior_date": "2026-04-03",
+        "bps_change": 8,
         "series_id": "DGS10"
       },
       "sofr": {
-        "current_value": 3.61,
-        "prior_value": 3.65,
-        "current_date": "2026-05-06",
-        "prior_date": "2026-04-06",
+        "current_value": 3.62,
+        "prior_value": 3.66,
+        "current_date": "2026-05-05",
+        "prior_date": "2026-04-02",
         "bps_change": -4,
         "series_id": "SOFR"
       },
-      "narrative": "Over the last 30 days: 10Y rose 2 bps (now 4.36%); SOFR fell 4 bps (now 3.61%).",
+      "narrative": "Over the last 30 days: 10Y rose 8 bps (now 4.43%); SOFR fell 4 bps (now 3.62%).",
       "source_url_treasury_10y": "https://fred.stlouisfed.org/series/DGS10",
       "source_url_sofr": "https://fred.stlouisfed.org/series/SOFR"
     },
     "leasing_comps": {
-      "observed_rent_psf": 62.0,
+      "observed_rent_psf": 68.0,
       "source": "deal.demo_observations",
-      "provenance": "deal.demo_observations.observed_rent_psf (Five Midtown South office direct deals week of 2026-05-05 at \\-64/SF range, SF-weighted midpoint \\. Submarket direct vacancy 18.4% per CoStar. Average landlord concession package 10 months free rent.)",
+      "provenance": "deal.demo_observations.observed_rent_psf (Three Midtown South office leases week of 2026-04-26 signed at $66-69/SF, weighted midpoint $68.)",
       "sample_leases": [],
       "csv_path": null
     },
@@ -111,55 +111,55 @@
       "drivers": [
         {
           "name": "observed_rent_psf",
-          "observed": 62.0,
+          "observed": 68.0,
           "assumed": 74.0,
           "unit": "$/SF",
           "source_tool": "deal.demo_observations"
         },
         {
           "name": "observed_rate_bps",
-          "observed": 2.0,
+          "observed": 8.0,
           "assumed": null,
           "unit": "bps change",
           "source_tool": "macro_signals"
         }
       ],
-      "noi_delta_dollars": -469200,
+      "noi_delta_dollars": -180642,
       "noi_assumed_dollars": 5200000,
-      "noi_observed_dollars": 4730800,
+      "noi_observed_dollars": 5019358,
       "irr_assumed_pct": 0.1352,
-      "irr_observed_pct": 0.0524,
-      "irr_delta_pct": -0.0828,
+      "irr_observed_pct": 0.1035,
+      "irr_delta_pct": -0.0316,
       "irr_stated_in_deal_pct": 0.14,
       "exit_value_delta_dollars": null,
       "severity_hint": 5,
       "narrative_inputs": {
         "square_footage": 85000.0,
         "assumed_rent_psf": 74.0,
-        "observed_rent_psf": 62.0,
+        "observed_rent_psf": 68.0,
         "assumed_exit_cap": 0.06,
         "observed_exit_cap": null,
         "assumed_debt_rate": 0.045,
-        "observed_debt_rate": 0.0452,
-        "observed_rate_change_bps": 2,
+        "observed_debt_rate": 0.0458,
+        "observed_rate_change_bps": 8,
         "vacancy_rate": 0.08,
-        "annual_rent_rollover_pct": 0.5,
+        "annual_rent_rollover_pct": 0.385,
         "ltv": 0.75,
         "rent_growth": 0.03,
         "hold_period_years": 5
       }
     },
     "dispatch": {
-      "band": "red",
-      "edge_label": "requires_human_review",
-      "irr_observed_pct": 0.0524,
+      "band": "green",
+      "edge_label": "auto_render",
+      "irr_observed_pct": 0.1035,
       "irr_assumed_pct": 0.1352,
-      "irr_delta_pct": -0.0828,
+      "irr_delta_pct": -0.0316,
       "thresholds": {
         "green_above": 0.1,
         "red_below": 0.075
       },
-      "dispatch_reason": "observed IRR 5.24% below 7.5% red threshold"
+      "dispatch_reason": "observed IRR 10.35% exceeds 10.0% green hurdle"
     }
   }
 }

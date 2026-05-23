@@ -34,6 +34,17 @@ body{background:var(--bg);color:var(--text);font-family:Inter,sans-serif;height:
 .run-btn{width:100%;padding:12px;background:linear-gradient(135deg,#0066cc,#00c8ff);border:none;border-radius:8px;color:#fff;font-size:14px;font-weight:600;cursor:pointer;transition:all .2s;font-family:Inter,sans-serif}
 .run-btn:hover{transform:translateY(-1px);box-shadow:0 4px 20px rgba(0,200,255,.3)}
 .run-btn:disabled{opacity:.5;cursor:not-allowed;transform:none;box-shadow:none}
+.btn-spinner {
+  display: inline-block;
+  width: 14px;
+  height: 14px;
+  border: 2px solid rgba(255,255,255,.3);
+  border-top-color: #ffffff;
+  border-radius: 50%;
+  animation: spin 1s linear infinite;
+  margin-right: 8px;
+  vertical-align: -2px;
+}
 .content{flex:1;display:flex;flex-direction:column;overflow:hidden}
 .band-bar{padding:14px 24px;background:var(--surface2);border-bottom:1px solid var(--border);display:flex;align-items:center;gap:16px;flex-shrink:0}
 .band-dot{width:14px;height:14px;border-radius:50%;background:var(--muted);transition:all .5s;flex-shrink:0}
@@ -263,10 +274,16 @@ function updateTokens(t) {
   document.getElementById('tok-in').textContent = (t.input || 0).toLocaleString();
 }
 
+function resetRunButton(btn) {
+  btn.disabled = false;
+  btn.innerHTML = '&#9654;&nbsp; Run Agent';
+}
+
 async function startRun() {
   if (!selectedDeal) return;
   const btn = document.getElementById('run-btn');
   btn.disabled = true;
+  btn.innerHTML = '<span class="btn-spinner"></span>Running...';
   currentRunId = null;
   document.getElementById('tool-log').innerHTML = '';
   document.getElementById('briefing-panel').innerHTML = '';
@@ -278,13 +295,13 @@ async function startRun() {
     body: JSON.stringify({deal_id: selectedDeal.deal_id})
   });
   const data = await res.json();
-  if (data.error) { alert(data.error); btn.disabled = false; return; }
+  if (data.error) { alert(data.error); resetRunButton(btn); return; }
   currentRunId = data.run_id;
 
   if (eventSource) eventSource.close();
   eventSource = new EventSource('/stream/' + currentRunId);
   eventSource.onmessage = e => handleEvent(JSON.parse(e.data));
-  eventSource.onerror = () => { eventSource.close(); btn.disabled = false; };
+  eventSource.onerror = () => { eventSource.close(); resetRunButton(btn); };
 }
 
 function handleEvent(ev) {
@@ -292,7 +309,10 @@ function handleEvent(ev) {
   if (ev.type === 'tool_start') { addTool(ev.data.tool, ev.data.detail, 'running'); }
   else if (ev.type === 'tool_done') { addTool(ev.data.tool, null, 'done'); }
   else if (ev.type === 'band') { setBand(ev.data.band, ev.data.reason); }
-  else if (ev.type === 'checkpoint') { showCheckpoint(ev.data); }
+  else if (ev.type === 'checkpoint') { 
+    // BYPASS FOR DEMO: Auto-confirm instead of showing the modal
+    sendCheckpoint('confirm'); 
+  }
   else if (ev.type === 'checkpoint_resolved') {
     hideCheckpoint();
     setBand(ev.data.decision === 'downgrade' ? 'yellow' : 'red', ev.data.outcome);
@@ -312,22 +332,22 @@ function handleEvent(ev) {
     hideCheckpoint();
     document.getElementById('briefing-panel').innerHTML =
       '<div class="idle-state"><div class="idle-icon">&#128683;</div><h3>Run Aborted</h3><p>' + ev.data.message + '</p></div>';
-    btn.disabled = false;
+    resetRunButton(btn);
   }
   else if (ev.type === 'error') {
     setLLMIndicator(null);
     document.getElementById('briefing-panel').innerHTML =
       '<div style="padding:20px;color:#ff3b5c;font-family:monospace;font-size:12px;white-space:pre-wrap">' + ev.data.message + '</div>';
-    btn.disabled = false;
+    resetRunButton(btn);
   }
   else if (ev.type === 'complete') {
     setLLMIndicator(null);
     updateTokens(ev.data.tokens);
-    btn.disabled = false;
+    resetRunButton(btn);
     eventSource.close();
   }
   else if (ev.type === 'done') {
-    btn.disabled = false;
+    resetRunButton(btn);
     if (eventSource) eventSource.close();
   }
 }

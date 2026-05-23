@@ -199,7 +199,7 @@ def get_macro_signals(days_back: int = 30) -> str:
 if __name__ == "__main__":
     from dotenv import load_dotenv
 
-    load_dotenv()
+    load_dotenv(override=True)
 
     print("=" * 60)
     print("TEST 1: Missing FRED_API_KEY returns error envelope")

@@ -1,0 +1,39 @@
+{
+  "deal_id": "queens-industrial-001",
+  "property": {
+    "address": "45-02 Ditmars Blvd, Queens, NY 11105",
+    "bbl": "4007800001",
+    "borough": "4",
+    "submarket": "Astoria/LIC",
+    "asset_class": "industrial",
+    "square_footage": 50000,
+    "top_tenants": [
+      "Logistics Co"
+    ]
+  },
+  "deal_stage": "Diligence",
+  "underwriting": {
+    "market_rent_psf": 32.0,
+    "in_place_rent_psf": 30.0,
+    "vacancy_rate": 0.05,
+    "going_in_cap": 0.05,
+    "exit_cap": 0.055,
+    "rent_growth": 0.035,
+    "hold_period_years": 5,
+    "noi": 1200000,
+    "irr": 0.09
+  },
+  "financing": {
+    "ltv": 0.70,
+    "debt_rate": 0.055
+  },
+  "market_dynamics": {
+    "annual_rent_rollover_pct": 0.1
+  },
+  "demo_observations": {
+    "observed_rent_psf": 30.00,
+    "_note": "YELLOW-band demo scenario: Queens industrial rents softening slightly. Observed comps print at $30/SF vs underwritten $32. Watch-list flag.",
+    "_simulated_signal": "Two LIC industrial leases week of 2026-05-05 at $30.00/SF. Submarket absorption slowing."
+  },
+  "assumptions_locked_at": "2026-04-25"
+}

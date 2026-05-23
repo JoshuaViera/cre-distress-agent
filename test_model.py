@@ -12,7 +12,7 @@ from strands.models.litellm import LiteLLMModel
 
 logging.getLogger("LiteLLM").setLevel(logging.ERROR)
 
-load_dotenv()
+load_dotenv(override=True)
 
 DEFAULT_MODEL_ID = "openrouter/tencent/hy3-preview:free"
 model_id = os.getenv("MODEL_ID", DEFAULT_MODEL_ID)

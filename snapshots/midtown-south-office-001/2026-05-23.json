@@ -1,6 +1,6 @@
 {
   "snapshot_version": "v2",
-  "captured_at": "2026-05-07T23:25:43.165786+00:00",
+  "captured_at": "2026-05-23T02:49:06.361349+00:00",
   "deal_id": "midtown-south-office-001",
   "tool_outputs": {
     "violations": {
@@ -23,78 +23,78 @@
       "days_back": 90,
       "min_sale_price": 1000000,
       "sale_count": 500,
-      "median_price": 2000000.0,
+      "median_price": 1812500.0,
       "sample_sales": [
         {
-          "document_id": "2026031800317001",
+          "document_id": "2026042900969001",
           "doc_type": "DEED",
-          "sale_price": 1600000.0,
-          "recorded_date": "2026-03-31",
+          "sale_price": 1070000.0,
+          "recorded_date": "2026-04-30",
           "address": "",
           "borough_code": "",
-          "acris_url": "https://a836-acris.nyc.gov/DS/DocumentSearch/DocumentDetail?doc_id=2026031800317001"
+          "acris_url": "https://a836-acris.nyc.gov/DS/DocumentSearch/DocumentDetail?doc_id=2026042900969001"
         },
         {
-          "document_id": "2026032700907001",
+          "document_id": "2026042400271001",
           "doc_type": "DEED",
-          "sale_price": 1545000.0,
-          "recorded_date": "2026-03-31",
-          "address": "240 EAST 47TH STREET",
+          "sale_price": 15200000.0,
+          "recorded_date": "2026-04-30",
+          "address": "246 EAST 53RD STREET",
           "borough_code": "1",
-          "acris_url": "https://a836-acris.nyc.gov/DS/DocumentSearch/DocumentDetail?doc_id=2026032700907001"
+          "acris_url": "https://a836-acris.nyc.gov/DS/DocumentSearch/DocumentDetail?doc_id=2026042400271001"
         },
         {
-          "document_id": "2026033100385001",
+          "document_id": "2026042900278001",
           "doc_type": "DEED",
-          "sale_price": 1201257.0,
-          "recorded_date": "2026-03-31",
-          "address": "",
-          "borough_code": "",
-          "acris_url": "https://a836-acris.nyc.gov/DS/DocumentSearch/DocumentDetail?doc_id=2026033100385001"
-        },
-        {
-          "document_id": "2026032700911001",
-          "doc_type": "DEED",
-          "sale_price": 3650000.0,
-          "recorded_date": "2026-03-31",
-          "address": "1018 LEXINGTON AVENUE",
+          "sale_price": 1715000.0,
+          "recorded_date": "2026-04-30",
+          "address": "160 WEST 66TH STREET",
           "borough_code": "1",
-          "acris_url": "https://a836-acris.nyc.gov/DS/DocumentSearch/DocumentDetail?doc_id=2026032700911001"
+          "acris_url": "https://a836-acris.nyc.gov/DS/DocumentSearch/DocumentDetail?doc_id=2026042900278001"
         },
         {
-          "document_id": "2026033100307001",
+          "document_id": "2026042101035002",
           "doc_type": "DEED",
-          "sale_price": 2300000.0,
-          "recorded_date": "2026-03-31",
-          "address": "",
-          "borough_code": "",
-          "acris_url": "https://a836-acris.nyc.gov/DS/DocumentSearch/DocumentDetail?doc_id=2026033100307001"
+          "sale_price": 2400000.0,
+          "recorded_date": "2026-04-30",
+          "address": "2 CORNELIA STREET",
+          "borough_code": "1",
+          "acris_url": "https://a836-acris.nyc.gov/DS/DocumentSearch/DocumentDetail?doc_id=2026042101035002"
+        },
+        {
+          "document_id": "2026043000557001",
+          "doc_type": "DEED",
+          "sale_price": 2999999.0,
+          "recorded_date": "2026-04-30",
+          "address": "344 BOWERY",
+          "borough_code": "1",
+          "acris_url": "https://a836-acris.nyc.gov/DS/DocumentSearch/DocumentDetail?doc_id=2026043000557001"
         }
       ],
       "market_signal": "active",
-      "source_url": "https://data.cityofnewyork.us/resource/bnx9-e6tj.json?$where=recorded_borough='1'%20AND%20(doc_type='DEED'%20OR%20doc_type='DEEDO')%20AND%20document_amt%20>=%20'1000000'%20AND%20recorded_datetime%20>=%20'2026-02-06T23:25:39.000'&$limit=500&$order=recorded_datetime%20DESC"
+      "source_url": "https://data.cityofnewyork.us/resource/bnx9-e6tj.json?$where=recorded_borough='1'%20AND%20(doc_type='DEED'%20OR%20doc_type='DEEDO')%20AND%20document_amt%20>=%20'1000000'%20AND%20recorded_datetime%20>=%20'2026-02-22T02:49:01.000'&$limit=500&$order=recorded_datetime%20DESC"
     },
     "macro_signals": {
-      "macro_signal": "stable",
-      "as_of": "2026-05-07",
+      "macro_signal": "rates_moved",
+      "as_of": "2026-05-23",
       "lookback_days": 30,
       "treasury_10y": {
-        "current_value": 4.36,
-        "prior_value": 4.34,
-        "current_date": "2026-05-06",
-        "prior_date": "2026-04-06",
-        "bps_change": 2,
+        "current_value": 4.57,
+        "prior_value": 4.3,
+        "current_date": "2026-05-21",
+        "prior_date": "2026-04-21",
+        "bps_change": 27,
         "series_id": "DGS10"
       },
       "sofr": {
-        "current_value": 3.61,
-        "prior_value": 3.65,
-        "current_date": "2026-05-06",
-        "prior_date": "2026-04-06",
-        "bps_change": -4,
+        "current_value": 3.51,
+        "prior_value": 3.63,
+        "current_date": "2026-05-21",
+        "prior_date": "2026-04-21",
+        "bps_change": -12,
         "series_id": "SOFR"
       },
-      "narrative": "Over the last 30 days: 10Y rose 2 bps (now 4.36%); SOFR fell 4 bps (now 3.61%).",
+      "narrative": "Over the last 30 days: 10Y rose 27 bps (now 4.57%); SOFR fell 12 bps (now 3.51%).",
       "source_url_treasury_10y": "https://fred.stlouisfed.org/series/DGS10",
       "source_url_sofr": "https://fred.stlouisfed.org/series/SOFR"
     },
@@ -118,7 +118,7 @@
         },
         {
           "name": "observed_rate_bps",
-          "observed": 2.0,
+          "observed": 27.0,
           "assumed": null,
           "unit": "bps change",
           "source_tool": "macro_signals"
@@ -128,8 +128,8 @@
       "noi_assumed_dollars": 5200000,
       "noi_observed_dollars": 4730800,
       "irr_assumed_pct": 0.1352,
-      "irr_observed_pct": 0.0524,
-      "irr_delta_pct": -0.0828,
+      "irr_observed_pct": 0.0446,
+      "irr_delta_pct": -0.0906,
       "irr_stated_in_deal_pct": 0.14,
       "exit_value_delta_dollars": null,
       "severity_hint": 5,
@@ -140,8 +140,8 @@
         "assumed_exit_cap": 0.06,
         "observed_exit_cap": null,
         "assumed_debt_rate": 0.045,
-        "observed_debt_rate": 0.0452,
-        "observed_rate_change_bps": 2,
+        "observed_debt_rate": 0.0477,
+        "observed_rate_change_bps": 27,
         "vacancy_rate": 0.08,
         "annual_rent_rollover_pct": 0.5,
         "ltv": 0.75,
@@ -152,14 +152,14 @@
     "dispatch": {
       "band": "red",
       "edge_label": "requires_human_review",
-      "irr_observed_pct": 0.0524,
+      "irr_observed_pct": 0.0446,
       "irr_assumed_pct": 0.1352,
-      "irr_delta_pct": -0.0828,
+      "irr_delta_pct": -0.0906,
       "thresholds": {
         "green_above": 0.1,
         "red_below": 0.075
       },
-      "dispatch_reason": "observed IRR 5.24% below 7.5% red threshold"
+      "dispatch_reason": "observed IRR 4.46% below 7.5% red threshold"
     }
   }
 }
