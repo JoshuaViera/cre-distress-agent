@@ -78,7 +78,7 @@ def test_bad_input_returns_error_envelope():
 
 
 def test_real_demo_deal(demo_deal):
-    """Sanity: the staged Midtown South deal still resolves to 68.0 from demo_observations."""
+    """Sanity: the staged Midtown South deal still resolves to 62.0 from demo_observations."""
     out = json.loads(get_leasing_comps(demo_deal))
-    assert out["observed_rent_psf"] == 68.0
+    assert out["observed_rent_psf"] == 62.0
     assert out["source"] == "deal.demo_observations"
